@@ -9,54 +9,59 @@
  * either during the course or afterwards.
  * 
  *  @Beverly A. Sanders, 2017
-  */
+ */
 
 package cop5556fa17;
-
 
 import java.util.ArrayList;
 import java.util.Arrays;
 
 public class Scanner {
-	
+
 	@SuppressWarnings("serial")
 	public static class LexicalException extends Exception {
-		
+
 		int pos;
 
 		public LexicalException(String message, int pos) {
 			super(message);
 			this.pos = pos;
 		}
-		
-		public int getPos() { return pos; }
+
+		public int getPos() {
+			return pos;
+		}
 
 	}
 
 	public static enum Kind {
-		IDENTIFIER, INTEGER_LITERAL, BOOLEAN_LITERAL, STRING_LITERAL, 
-		KW_x/* x */, KW_X/* X */, KW_y/* y */, KW_Y/* Y */, KW_r/* r */, KW_R/* R */, KW_a/* a */, 
-		KW_A/* A */, KW_Z/* Z */, KW_DEF_X/* DEF_X */, KW_DEF_Y/* DEF_Y */, KW_SCREEN/* SCREEN */, 
-		KW_cart_x/* cart_x */, KW_cart_y/* cart_y */, KW_polar_a/* polar_a */, KW_polar_r/* polar_r */, 
-		KW_abs/* abs */, KW_sin/* sin */, KW_cos/* cos */, KW_atan/* atan */, KW_log/* log */, 
-		KW_image/* image */,  KW_int/* int */, 
-		KW_boolean/* boolean */, KW_url/* url */, KW_file/* file */, OP_ASSIGN/* = */, OP_GT/* > */, OP_LT/* < */, 
-		OP_EXCL/* ! */, OP_Q/* ? */, OP_COLON/* : */, OP_EQ/* == */, OP_NEQ/* != */, OP_GE/* >= */, OP_LE/* <= */, 
-		OP_AND/* & */, OP_OR/* | */, OP_PLUS/* + */, OP_MINUS/* - */, OP_TIMES/* * */, OP_DIV/* / */, OP_MOD/* % */, 
-		OP_POWER/* ** */, OP_AT/* @ */, OP_RARROW/* -> */, OP_LARROW/* <- */, LPAREN/* ( */, RPAREN/* ) */, 
-		LSQUARE/* [ */, RSQUARE/* ] */, SEMI/* ; */, COMMA/* , */, EOF;
+		IDENTIFIER, INTEGER_LITERAL, BOOLEAN_LITERAL, STRING_LITERAL, KW_x/* x */, KW_X/* X */, KW_y/* y */, KW_Y/* Y */, KW_r/* r */, KW_R/* R */, KW_a/* a */, KW_A/* A */, KW_Z/* Z */, KW_DEF_X/* DEF_X */, KW_DEF_Y/* DEF_Y */, KW_SCREEN/* SCREEN */, KW_cart_x/* cart_x */, KW_cart_y/* cart_y */, KW_polar_a/* polar_a */, KW_polar_r/* polar_r */, KW_abs/* abs */, KW_sin/* sin */, KW_cos/* cos */, KW_atan/* atan */, KW_log/* log */, KW_image/* image */, KW_int/* int */, KW_boolean/* boolean */, KW_url/* url */, KW_file/* file */, OP_ASSIGN/* = */, OP_GT/* > */, OP_LT/* < */, OP_EXCL/* ! */, OP_Q/* ? */, OP_COLON/* : */, OP_EQ/* == */, OP_NEQ/* != */, OP_GE/* >= */, OP_LE/* <= */, OP_AND/* & */, OP_OR/* | */, OP_PLUS/* + */, OP_MINUS/* - */, OP_TIMES/* * */, OP_DIV/* / */, OP_MOD/* % */, OP_POWER/* ** */, OP_AT/* @ */, OP_RARROW/*
+																																																																																																																																																																																																							 * -
+																																																																																																																																																																																																							 * >
+																																																																																																																																																																																																							 */, OP_LARROW/*
+																																																																																																																																																																																																										 * <
+																																																																																																																																																																																																										 * -
+																																																																																																																																																																																																										 */, LPAREN/* ( */, RPAREN/* ) */, LSQUARE/* [ */, RSQUARE/* ] */, SEMI/* ; */, COMMA/* , */, EOF;
 	}
 
-	/** Class to represent Tokens. 
+	/*
+	 * enum to list the various states in the finite automata tree for the
+	 * scanner
+	 */
+	public static enum State {
+		START, IN_DIGIT, IN_IDENT, AFTER_EQ
+	}
+
+	/**
+	 * Class to represent Tokens.
 	 * 
-	 * This is defined as a (non-static) inner class
-	 * which means that each Token instance is associated with a specific 
-	 * Scanner instance.  We use this when some token methods access the
-	 * chars array in the associated Scanner.
+	 * This is defined as a (non-static) inner class which means that each Token
+	 * instance is associated with a specific Scanner instance. We use this when
+	 * some token methods access the chars array in the associated Scanner.
 	 * 
 	 * 
 	 * @author Beverly Sanders
-	 *
+	 * 
 	 */
 	public class Token {
 		public final Kind kind;
@@ -77,16 +82,15 @@ public class Scanner {
 		public String getText() {
 			if (kind == Kind.STRING_LITERAL) {
 				return chars2String(chars, pos, length);
-			}
-			else return String.copyValueOf(chars, pos, length);
+			} else
+				return String.copyValueOf(chars, pos, length);
 		}
 
 		/**
-		 * To get the text of a StringLiteral, we need to remove the
-		 * enclosing " characters and convert escaped characters to
-		 * the represented character.  For example the two characters \ t
-		 * in the char array should be converted to a single tab character in
-		 * the returned String
+		 * To get the text of a StringLiteral, we need to remove the enclosing "
+		 * characters and convert escaped characters to the represented
+		 * character. For example the two characters \ t in the char array
+		 * should be converted to a single tab character in the returned String
 		 * 
 		 * @param chars
 		 * @param pos
@@ -95,7 +99,8 @@ public class Scanner {
 		 */
 		private String chars2String(char[] chars, int pos, int length) {
 			StringBuilder sb = new StringBuilder();
-			for (int i = pos + 1; i < pos + length - 1; ++i) {// omit initial and final "
+			for (int i = pos + 1; i < pos + length - 1; ++i) {// omit initial
+																// and final "
 				char ch = chars[i];
 				if (ch == '\\') { // handle escape
 					i++;
@@ -111,10 +116,14 @@ public class Scanner {
 						sb.append('\f');
 						break;
 					case 'r':
-						sb.append('\r'); //for completeness, line termination chars not allowed in String literals
+						sb.append('\r'); // for completeness, line termination
+											// chars not allowed in String
+											// literals
 						break;
 					case 'n':
-						sb.append('\n'); //for completeness, line termination chars not allowed in String literals
+						sb.append('\n'); // for completeness, line termination
+											// chars not allowed in String
+											// literals
 						break;
 					case '\"':
 						sb.append('\"');
@@ -137,7 +146,7 @@ public class Scanner {
 		}
 
 		/**
-		 * precondition:  This Token is an INTEGER_LITERAL
+		 * precondition: This Token is an INTEGER_LITERAL
 		 * 
 		 * @returns the integer value represented by the token
 		 */
@@ -147,13 +156,15 @@ public class Scanner {
 		}
 
 		public String toString() {
-			return "[" + kind + "," + String.copyValueOf(chars, pos, length)  + "," + pos + "," + length + "," + line + ","
-					+ pos_in_line + "]";
+			return "[" + kind + "," + String.copyValueOf(chars, pos, length)
+					+ "," + pos + "," + length + "," + line + "," + pos_in_line
+					+ "]";
 		}
 
-		/** 
+		/**
 		 * Since we overrode equals, we need to override hashCode.
-		 * https://docs.oracle.com/javase/8/docs/api/java/lang/Object.html#equals-java.lang.Object-
+		 * https://docs.oracle
+		 * .com/javase/8/docs/api/java/lang/Object.html#equals-java.lang.Object-
 		 * 
 		 * Both the equals and hashCode method were generated by eclipse
 		 * 
@@ -172,8 +183,8 @@ public class Scanner {
 		}
 
 		/**
-		 * Override equals method to return true if other object
-		 * is the same class and all fields are equal.
+		 * Override equals method to return true if other object is the same
+		 * class and all fields are equal.
 		 * 
 		 * Overriding this creates an obligation to override hashCode.
 		 * 
@@ -205,8 +216,9 @@ public class Scanner {
 		}
 
 		/**
-		 * used in equals to get the Scanner object this Token is 
-		 * associated with.
+		 * used in equals to get the Scanner object this Token is associated
+		 * with.
+		 * 
 		 * @return
 		 */
 		private Scanner getOuterType() {
@@ -215,26 +227,23 @@ public class Scanner {
 
 	}
 
-	/** 
+	/**
 	 * Extra character added to the end of the input characters to simplify the
-	 * Scanner.  
+	 * Scanner.
 	 */
 	static final char EOFchar = 0;
-	
+
 	/**
 	 * The list of tokens created by the scan method.
 	 */
 	final ArrayList<Token> tokens;
-	
+
 	/**
-	 * An array of characters representing the input.  These are the characters
+	 * An array of characters representing the input. These are the characters
 	 * from the input string plus and additional EOFchar at the end.
 	 */
-	final char[] chars;  
+	final char[] chars;
 
-
-
-	
 	/**
 	 * position of the next token to be returned by a call to nextToken
 	 */
@@ -242,11 +251,15 @@ public class Scanner {
 
 	Scanner(String inputString) {
 		int numChars = inputString.length();
-		this.chars = Arrays.copyOf(inputString.toCharArray(), numChars + 1); // input string terminated with null char
+		this.chars = Arrays.copyOf(inputString.toCharArray(), numChars + 1); // input
+																				// string
+																				// terminated
+																				// with
+																				// null
+																				// char
 		chars[numChars] = EOFchar;
 		tokens = new ArrayList<Token>();
 	}
-
 
 	/**
 	 * Method to scan the input and create a list of Tokens.
@@ -257,15 +270,42 @@ public class Scanner {
 	 * @throws LexicalException
 	 */
 	public Scanner scan() throws LexicalException {
-		/* TODO  Replace this with a correct and complete implementation!!! */
+		/* TODO Replace this with a correct and complete implementation!!! */
 		int pos = 0;
+		State state = State.START;
+		int startPos = 0;
 		int line = 1;
 		int posInLine = 1;
-		tokens.add(new Token(Kind.EOF, pos, 0, line, posInLine));
+		System.out.println("loop started");
+		while (pos < chars.length) {
+			char ch = chars[pos];
+			switch (state) {
+				case START: {
+				}
+				break;
+				case IN_DIGIT: {
+					
+				}
+				break;
+				case IN_IDENT:{
+					
+				}
+				break;
+				
+				
+
+			}
+		}
+		System.out.println("loop ended");
+		tokens.add(new Token(Kind.EOF, pos,0,line,posInLine));
+		
+		/*
+		 * int line = 1; int posInLine = 1; tokens.add(new Token(Kind.EOF, pos,
+		 * 0, line, posInLine));
+		 */
 		return this;
 
 	}
-
 
 	/**
 	 * Returns true if the internal interator has more Tokens
@@ -277,34 +317,34 @@ public class Scanner {
 	}
 
 	/**
-	 * Returns the next Token and updates the internal iterator so that
-	 * the next call to nextToken will return the next token in the list.
+	 * Returns the next Token and updates the internal iterator so that the next
+	 * call to nextToken will return the next token in the list.
 	 * 
 	 * It is the callers responsibility to ensure that there is another Token.
 	 * 
-	 * Precondition:  hasTokens()
+	 * Precondition: hasTokens()
+	 * 
 	 * @return
 	 */
 	public Token nextToken() {
 		return tokens.get(nextTokenPos++);
 	}
-	
+
 	/**
-	 * Returns the next Token, but does not update the internal iterator.
-	 * This means that the next call to nextToken or peek will return the
-	 * same Token as returned by this methods.
+	 * Returns the next Token, but does not update the internal iterator. This
+	 * means that the next call to nextToken or peek will return the same Token
+	 * as returned by this methods.
 	 * 
 	 * It is the callers responsibility to ensure that there is another Token.
 	 * 
-	 * Precondition:  hasTokens()
+	 * Precondition: hasTokens()
 	 * 
 	 * @return next Token.
 	 */
 	public Token peek() {
 		return tokens.get(nextTokenPos);
 	}
-	
-	
+
 	/**
 	 * Resets the internal iterator so that the next call to peek or nextToken
 	 * will return the first Token.
@@ -314,7 +354,7 @@ public class Scanner {
 	}
 
 	/**
-	 * Returns a String representation of the list of Tokens 
+	 * Returns a String representation of the list of Tokens
 	 */
 	public String toString() {
 		StringBuffer sb = new StringBuffer();

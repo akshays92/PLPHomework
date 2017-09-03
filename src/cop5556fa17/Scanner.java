@@ -35,13 +35,14 @@ public class Scanner {
 	}
 
 	public static enum Kind {
-		IDENTIFIER, INTEGER_LITERAL, BOOLEAN_LITERAL, STRING_LITERAL, KW_x/* x */, KW_X/* X */, KW_y/* y */, KW_Y/* Y */, KW_r/* r */, KW_R/* R */, KW_a/* a */, KW_A/* A */, KW_Z/* Z */, KW_DEF_X/* DEF_X */, KW_DEF_Y/* DEF_Y */, KW_SCREEN/* SCREEN */, KW_cart_x/* cart_x */, KW_cart_y/* cart_y */, KW_polar_a/* polar_a */, KW_polar_r/* polar_r */, KW_abs/* abs */, KW_sin/* sin */, KW_cos/* cos */, KW_atan/* atan */, KW_log/* log */, KW_image/* image */, KW_int/* int */, KW_boolean/* boolean */, KW_url/* url */, KW_file/* file */, OP_ASSIGN/* = */, OP_GT/* > */, OP_LT/* < */, OP_EXCL/* ! */, OP_Q/* ? */, OP_COLON/* : */, OP_EQ/* == */, OP_NEQ/* != */, OP_GE/* >= */, OP_LE/* <= */, OP_AND/* & */, OP_OR/* | */, OP_PLUS/* + */, OP_MINUS/* - */, OP_TIMES/* * */, OP_DIV/* / */, OP_MOD/* % */, OP_POWER/* ** */, OP_AT/* @ */, OP_RARROW/*
-																																																																																																																																																																																																							 * -
-																																																																																																																																																																																																							 * >
-																																																																																																																																																																																																							 */, OP_LARROW/*
-																																																																																																																																																																																																										 * <
-																																																																																																																																																																																																										 * -
-																																																																																																																																																																																																										 */, LPAREN/* ( */, RPAREN/* ) */, LSQUARE/* [ */, RSQUARE/* ] */, SEMI/* ; */, COMMA/* , */, EOF;
+		IDENTIFIER, INTEGER_LITERAL, BOOLEAN_LITERAL, STRING_LITERAL, KW_x/* x */, KW_X/* X */, KW_y/* y */, 
+		KW_Y/* Y */, KW_r/* r */, KW_R/* R */, KW_a/* a */, KW_A/* A */, KW_Z/* Z */, KW_DEF_X/* DEF_X */, KW_DEF_Y/* DEF_Y */, 
+		KW_SCREEN/* SCREEN */, KW_cart_x/* cart_x */, KW_cart_y/* cart_y */, KW_polar_a/* polar_a */, KW_polar_r/* polar_r */, 
+		KW_abs/* abs */, KW_sin/* sin */, KW_cos/* cos */, KW_atan/* atan */, KW_log/* log */, KW_image/* image */, KW_int/* int */, 
+		KW_boolean/* boolean */, KW_url/* url */, KW_file/* file */, OP_ASSIGN/* = */, OP_GT/* > */, OP_LT/* < */, OP_EXCL/* ! */, 
+		OP_Q/* ? */, OP_COLON/* : */, OP_EQ/* == */, OP_NEQ/* != */, OP_GE/* >= */, OP_LE/* <= */, OP_AND/* & */, OP_OR/* | */, 
+		OP_PLUS/* + */, OP_MINUS/* - */, OP_TIMES/* * */, OP_DIV/* / */, OP_MOD/* % */, OP_POWER/* ** */, OP_AT/* @ */, OP_RARROW/* -> */,
+		OP_LARROW /* <- */, LPAREN/* ( */, RPAREN/* ) */, LSQUARE/* [ */, RSQUARE/* ] */, SEMI/* ; */, COMMA/* , */, EOF;
 	}
 
 	/*
@@ -273,32 +274,74 @@ public class Scanner {
 		/* TODO Replace this with a correct and complete implementation!!! */
 		int pos = 0;
 		State state = State.START;
-		int startPos = 0;
+
 		int line = 1;
 		int posInLine = 1;
+
 		System.out.println("loop started");
+
 		while (pos < chars.length) {
 			char ch = chars[pos];
 			switch (state) {
-				case START: {
-				}
-				break;
-				case IN_DIGIT: {
-					
-				}
-				break;
-				case IN_IDENT:{
-					
+			case START: {
+				int startPos = pos;
+				switch (ch) {
+				case '+': {
+					tokens.add(new Token(Kind.OP_PLUS,startPos, pos-startPos, line, posInLine));
+					pos++;
 				}
 				break;
 				
+				case '?': {
+					tokens.add(new Token(Kind.OP_Q,startPos, pos-startPos, line, posInLine));
+					pos++;
+				}
+				break;
+				case ':': {
+					tokens.add(new Token(Kind.OP_COLON,startPos, pos-startPos, line, posInLine));
+					pos++;
+				}
+				break;
+				case '&': {
+					tokens.add(new Token(Kind.OP_AND,startPos, pos-startPos, line, posInLine));
+					pos++;
+				}
+				break;
+				case '|': {
+					tokens.add(new Token(Kind.OP_OR,startPos, pos-startPos, line, posInLine));
+					pos++;
+				}
+				break;
+				case '@': {
+					tokens.add(new Token(Kind.OP_AT,startPos, pos-startPos, line, posInLine));
+					pos++;
+				}
+				break;
+				case '%': {
+					tokens.add(new Token(Kind.OP_MOD,startPos, pos-startPos, line, posInLine));
+					pos++;
+				}
+				break;
+					
 				
+				
+				}
+			}
+				break;
+			case IN_DIGIT: {
+
+			}
+				break;
+			case IN_IDENT: {
+
+			}
+				break;
 
 			}
 		}
 		System.out.println("loop ended");
-		tokens.add(new Token(Kind.EOF, pos,0,line,posInLine));
-		
+		tokens.add(new Token(Kind.EOF, pos, 0, line, posInLine));
+
 		/*
 		 * int line = 1; int posInLine = 1; tokens.add(new Token(Kind.EOF, pos,
 		 * 0, line, posInLine));

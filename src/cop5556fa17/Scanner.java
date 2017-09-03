@@ -16,6 +16,8 @@ package cop5556fa17;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import javax.sound.sampled.Line;
+
 public class Scanner {
 
 	@SuppressWarnings("serial")
@@ -50,7 +52,9 @@ public class Scanner {
 	 * scanner
 	 */
 	public static enum State {
-		START, IN_DIGIT, IN_IDENT, AFTER_EQ
+		START, IN_DIGIT, IN_IDENT, 
+		AFTER_FWD_SLASH, AFTER_EQUALS, AFTER_LESS_THAN, AFTER_GRATER_THAN, AFTER_EXCLAIMATION, AFTER_MINUS, AFTER_MUL, AFTER_BACK_SLASH,
+		AFTER_SLASH_R 
 	}
 
 	/**
@@ -277,52 +281,120 @@ public class Scanner {
 
 		int line = 1;
 		int posInLine = 1;
-
-		System.out.println("loop started");
-
+		System.out.println("chars length:"+chars.length);
+		int startPos=0;
 		while (pos < chars.length) {
 			char ch = chars[pos];
 			switch (state) {
 			case START: {
-				int startPos = pos;
+				startPos = pos;
 				switch (ch) {
-				case '+': {
-					tokens.add(new Token(Kind.OP_PLUS,startPos, pos-startPos, line, posInLine));
-					pos++;
-				}
-				break;
-				
 				case '?': {
-					tokens.add(new Token(Kind.OP_Q,startPos, pos-startPos, line, posInLine));
+					tokens.add(new Token(Kind.OP_Q,startPos, pos-startPos+1, line, posInLine));
 					pos++;
+					posInLine++;
 				}
 				break;
 				case ':': {
-					tokens.add(new Token(Kind.OP_COLON,startPos, pos-startPos, line, posInLine));
+					tokens.add(new Token(Kind.OP_COLON,startPos, pos-startPos+1, line, posInLine));
+					posInLine++;
 					pos++;
 				}
 				break;
 				case '&': {
-					tokens.add(new Token(Kind.OP_AND,startPos, pos-startPos, line, posInLine));
+					tokens.add(new Token(Kind.OP_AND,startPos, pos-startPos+1, line, posInLine));
 					pos++;
+					posInLine++;
 				}
 				break;
 				case '|': {
-					tokens.add(new Token(Kind.OP_OR,startPos, pos-startPos, line, posInLine));
+					tokens.add(new Token(Kind.OP_OR,startPos, pos-startPos+1, line, posInLine));
 					pos++;
+					posInLine++;
 				}
 				break;
-				case '@': {
-					tokens.add(new Token(Kind.OP_AT,startPos, pos-startPos, line, posInLine));
+				case '+': {
+					tokens.add(new Token(Kind.OP_PLUS,startPos, pos-startPos+1, line, posInLine));
 					pos++;
+					posInLine++;
 				}
 				break;
 				case '%': {
-					tokens.add(new Token(Kind.OP_MOD,startPos, pos-startPos, line, posInLine));
+					tokens.add(new Token(Kind.OP_MOD,startPos, pos-startPos+1, line, posInLine));
+					pos++;
+					posInLine++;
+				}
+				break;
+				case '@': {
+					tokens.add(new Token(Kind.OP_AT,startPos, pos-startPos+1, line, posInLine));
+					pos++;
+					posInLine++;
+				}
+				break;
+				case '(': {
+					tokens.add(new Token(Kind.LPAREN,startPos, pos-startPos+1, line, posInLine));
+					pos++;
+					posInLine++;
+				}
+				break;
+				case ')': {
+					tokens.add(new Token(Kind.RPAREN,startPos, pos-startPos+1, line, posInLine));
+					pos++;
+					posInLine++;
+				}
+				break;
+				case '[': {
+					tokens.add(new Token(Kind.LSQUARE,startPos, pos-startPos+1, line, posInLine));
+					pos++;posInLine++;
+				}
+				break;
+				case ']': {
+					tokens.add(new Token(Kind.RSQUARE,startPos, pos-startPos+1, line, posInLine));
+					pos++;
+					posInLine++;
+				}
+				break;
+				case ';': {
+					tokens.add(new Token(Kind.SEMI,startPos, pos-startPos+1, line, posInLine));
+					pos++;
+					posInLine++;
+				}
+				break;
+				case ',': {
+					tokens.add(new Token(Kind.COMMA,startPos, pos-startPos+1, line, posInLine));
+					pos++;
+					posInLine++;
+				}
+				break;
+				
+				case EOFchar:{
+					//tokens.add(new Token(Kind.EOF,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.EOF, pos,0, line, posInLine));
+					pos++;
+					posInLine++;
+				}
+				break;
+				
+				case '\n':{
+					posInLine=1;
+					line++;
 					pos++;
 				}
 				break;
-					
+				
+				case '\r':{
+					state=State.AFTER_SLASH_R;
+					posInLine=1;
+					line++;
+					pos++;
+				}
+				break;
+				
+				case '=':{
+					state=State.AFTER_EQUALS;
+					pos++;
+				}
+				break;
 				
 				
 				}
@@ -336,15 +408,35 @@ public class Scanner {
 
 			}
 				break;
+			
+			case AFTER_SLASH_R:{
+				if (ch=='\n') pos++;
+				else state=State.START;
+			}
+			break;
+			
+			case AFTER_EQUALS:{
+				if(ch=='='){
+					tokens.add(new Token(Kind.OP_EQ, pos,pos-startPos+1, line, posInLine));
+					pos++;
+					posInLine++;
+					
+				}
+				else {
+					tokens.add(new Token(Kind.OP_ASSIGN, pos,pos-startPos+1, line, posInLine));
+					pos++;
+					posInLine++;
+					state=State.START;
+				}
+			}
+			break;
 
 			}
 		}
-		System.out.println("loop ended");
-		tokens.add(new Token(Kind.EOF, pos, 0, line, posInLine));
-
+		
 		/*
-		 * int line = 1; int posInLine = 1; tokens.add(new Token(Kind.EOF, pos,
-		 * 0, line, posInLine));
+		 * int line = 1; int posInLine = 1; 
+		 * tokens.add(new Token(Kind.EOF, pos,0, line, posInLine));
 		 */
 		return this;
 

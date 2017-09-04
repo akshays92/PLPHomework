@@ -54,7 +54,7 @@ public class Scanner {
 	public static enum State {
 		START, IN_DIGIT, IN_IDENT, 
 		AFTER_FWD_SLASH, AFTER_EQUALS, AFTER_LESS_THAN, AFTER_GRATER_THAN, AFTER_EXCLAIMATION, AFTER_MINUS, AFTER_MUL, AFTER_BACK_SLASH,
-		AFTER_SLASH_R 
+		AFTER_SLASH_R, INSIDE_COMMENT
 	}
 
 	/**
@@ -286,9 +286,29 @@ public class Scanner {
 		while (pos < chars.length) {
 			char ch = chars[pos];
 			switch (state) {
+			//Case START of the DFA machine starts here
 			case START: {
 				startPos = pos;
 				switch (ch) {
+				//white space
+				case 32: {
+					pos++;
+					posInLine++;
+				}
+				break;
+				//horizontal tab
+				case 9: {
+					pos++;
+					posInLine++;
+				}
+				break;
+				//form feed
+				case 12: {
+					pos++;
+					posInLine++;
+				}
+				break;
+				
 				case '?': {
 					tokens.add(new Token(Kind.OP_Q,startPos, pos-startPos+1, line, posInLine));
 					pos++;
@@ -367,6 +387,7 @@ public class Scanner {
 				}
 				break;
 				
+				
 				case EOFchar:{
 					//tokens.add(new Token(Kind.EOF,startPos, pos-startPos+1, line, posInLine));
 					tokens.add(new Token(Kind.EOF, pos,0, line, posInLine));
@@ -393,15 +414,87 @@ public class Scanner {
 				case '=':{
 					state=State.AFTER_EQUALS;
 					pos++;
+					posInLine++;
 				}
 				break;
+				
+				case '/':{
+					state=state.AFTER_FWD_SLASH;
+					pos++;
+					posInLine++;
+				}
+				break;
+				
+				case '<':{
+					state=state.AFTER_LESS_THAN;
+					pos++;
+					posInLine++;
+					
+				}
+				break;
+				
+				case '>': {
+					
+					state=State.AFTER_GRATER_THAN;
+					pos++;
+					posInLine++;
+					
+				}
+				break;
+				
+				case '!': {
+					
+					state=State.AFTER_EXCLAIMATION;
+					pos++;
+					posInLine++;
+					
+				}
+				break;
+				
+				case '-': {
+					
+					state=State.AFTER_MINUS;
+					pos++;
+					posInLine++;
+					
+				}
+				break;
+				
+				case '*': {
+					
+					state=State.AFTER_MUL;
+					pos++;
+					posInLine++;
+					
+				}
+				break;
+				
+				default:{
+					if (Character.isDigit(ch)){
+						if (ch=='0'){
+							tokens.add(new Token(Kind.INTEGER_LITERAL,startPos, pos-startPos+1, line, posInLine));
+							pos++;
+							posInLine++;
+						}
+						else state=State.IN_DIGIT;
+					}
+				}
 				
 				
 				}
 			}
 				break;
+			//Case START of the DFA machine ends here	
+			
 			case IN_DIGIT: {
-
+				if (Character.isDigit(ch)) {
+					pos++;
+					posInLine++;
+				}
+				else{
+					state=State.START;
+					tokens.add(new Token(Kind.INTEGER_LITERAL,startPos, pos-startPos, line, posInLine-(pos-startPos)));
+				}
 			}
 				break;
 			case IN_IDENT: {
@@ -409,27 +502,136 @@ public class Scanner {
 			}
 				break;
 			
+			case AFTER_LESS_THAN: {
+				state=State.START;
+				if (chars[pos]=='='){
+					tokens.add(new Token(Kind.OP_LE,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+					pos++;
+					posInLine++;
+				}
+				else if (chars[pos]=='-'){
+					tokens.add(new Token(Kind.OP_LARROW,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+					pos++;
+					posInLine++;
+				}
+				else{
+					tokens.add(new Token(Kind.OP_LT,startPos, pos-1-startPos+1, line, posInLine-1));
+				}
+			}
+				break;
+				
+			case AFTER_GRATER_THAN:{
+				state=State.START;
+				if(chars[pos]=='='){
+					tokens.add(new Token(Kind.OP_GE,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+					pos++;
+					posInLine++;
+				}
+				else{
+					tokens.add(new Token(Kind.OP_GT,startPos, pos-1-startPos+1, line, posInLine-1));
+				}
+			}
+			break;
+			
+			case AFTER_MUL:{
+				state=State.START;
+				if(chars[pos]=='*'){
+					tokens.add(new Token(Kind.OP_POWER,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+					pos++;
+					posInLine++;
+				}
+				else{
+					tokens.add(new Token(Kind.OP_TIMES,startPos, pos-1-startPos+1, line, posInLine-1));
+				}
+			}
+			break;
+			
+			case AFTER_EXCLAIMATION:{
+				state=State.START;
+				if(chars[pos]=='='){
+					tokens.add(new Token(Kind.OP_NEQ,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+					pos++;
+					posInLine++;
+				}
+				else{
+					tokens.add(new Token(Kind.OP_EXCL,startPos, pos-1-startPos+1, line, posInLine-1));
+				}
+			}
+			break;
+			
+			case AFTER_MINUS:{
+				state=State.START;
+				if(chars[pos]=='>'){
+					tokens.add(new Token(Kind.OP_RARROW,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+					pos++;
+					posInLine++;
+				}
+				else{
+					tokens.add(new Token(Kind.OP_MINUS,startPos, pos-1-startPos+1, line, posInLine-1));
+				}
+			}
+			break;
+			
 			case AFTER_SLASH_R:{
 				if (ch=='\n') pos++;
 				else state=State.START;
 			}
 			break;
 			
-			case AFTER_EQUALS:{
-				if(ch=='='){
-					tokens.add(new Token(Kind.OP_EQ, pos,pos-startPos+1, line, posInLine));
+			case AFTER_FWD_SLASH:{
+				if (ch=='/'){
+					//start of a comment, ignore all stuff in the next state till new line is encountered
+					state=State.INSIDE_COMMENT;
 					pos++;
 					posInLine++;
 					
 				}
-				else {
-					tokens.add(new Token(Kind.OP_ASSIGN, pos,pos-startPos+1, line, posInLine));
-					pos++;
-					posInLine++;
+				else{
+					tokens.add(new Token(Kind.OP_DIV, startPos, pos-startPos, line, posInLine-1));
 					state=State.START;
 				}
 			}
 			break;
+			
+			case INSIDE_COMMENT:{
+				if (ch=='\n'){
+					posInLine=1;
+					line++;
+					pos++;
+					state=State.START;
+				}
+				
+				else if (ch=='\r'){
+					state=State.AFTER_SLASH_R;
+					posInLine=1;
+					line++;
+					pos++;
+				}
+				else {
+					posInLine++;
+					pos++;
+				}
+			}
+			break;
+			
+			case AFTER_EQUALS:{
+				if(ch=='='){
+					int len = pos-startPos+1;
+					tokens.add(new Token(Kind.OP_EQ, startPos,len, line, posInLine-len+1));
+					pos++;
+					posInLine++;
+					state=State.START;
+					
+				}
+				else {
+					int len = pos-1-startPos+1;
+					tokens.add(new Token(Kind.OP_ASSIGN,startPos, len, line, posInLine-len));
+					state=State.START;	
+				}
+			}
+			break;
+			
+			
 
 			}
 		}

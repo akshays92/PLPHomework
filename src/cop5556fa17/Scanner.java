@@ -39,14 +39,13 @@ public class Scanner {
 	}
 
 	public static enum Kind {
-		IDENTIFIER, INTEGER_LITERAL, BOOLEAN_LITERAL, STRING_LITERAL, KW_x/* x */, KW_X/* X */, KW_y/* y */, 
-		KW_Y/* Y */, KW_r/* r */, KW_R/* R */, KW_a/* a */, KW_A/* A */, KW_Z/* Z */, KW_DEF_X/* DEF_X */, KW_DEF_Y/* DEF_Y */, 
-		KW_SCREEN/* SCREEN */, KW_cart_x/* cart_x */, KW_cart_y/* cart_y */, KW_polar_a/* polar_a */, KW_polar_r/* polar_r */, 
-		KW_abs/* abs */, KW_sin/* sin */, KW_cos/* cos */, KW_atan/* atan */, KW_log/* log */, KW_image/* image */, KW_int/* int */, 
-		KW_boolean/* boolean */, KW_url/* url */, KW_file/* file */, OP_ASSIGN/* = */, OP_GT/* > */, OP_LT/* < */, OP_EXCL/* ! */, 
-		OP_Q/* ? */, OP_COLON/* : */, OP_EQ/* == */, OP_NEQ/* != */, OP_GE/* >= */, OP_LE/* <= */, OP_AND/* & */, OP_OR/* | */, 
-		OP_PLUS/* + */, OP_MINUS/* - */, OP_TIMES/* * */, OP_DIV/* / */, OP_MOD/* % */, OP_POWER/* ** */, OP_AT/* @ */, OP_RARROW/* -> */,
-		OP_LARROW /* <- */, LPAREN/* ( */, RPAREN/* ) */, LSQUARE/* [ */, RSQUARE/* ] */, SEMI/* ; */, COMMA/* , */, EOF;
+		IDENTIFIER, INTEGER_LITERAL, BOOLEAN_LITERAL, STRING_LITERAL, KW_x/* x */, KW_X/* X */, KW_y/* y */, KW_Y/* Y */, KW_r/* r */, KW_R/* R */, KW_a/* a */, KW_A/* A */, KW_Z/* Z */, KW_DEF_X/* DEF_X */, KW_DEF_Y/* DEF_Y */, KW_SCREEN/* SCREEN */, KW_cart_x/* cart_x */, KW_cart_y/* cart_y */, KW_polar_a/* polar_a */, KW_polar_r/* polar_r */, KW_abs/* abs */, KW_sin/* sin */, KW_cos/* cos */, KW_atan/* atan */, KW_log/* log */, KW_image/* image */, KW_int/* int */, KW_boolean/* boolean */, KW_url/* url */, KW_file/* file */, OP_ASSIGN/* = */, OP_GT/* > */, OP_LT/* < */, OP_EXCL/* ! */, OP_Q/* ? */, OP_COLON/* : */, OP_EQ/* == */, OP_NEQ/* != */, OP_GE/* >= */, OP_LE/* <= */, OP_AND/* & */, OP_OR/* | */, OP_PLUS/* + */, OP_MINUS/* - */, OP_TIMES/* * */, OP_DIV/* / */, OP_MOD/* % */, OP_POWER/* ** */, OP_AT/* @ */, OP_RARROW/*
+																																																																																																																																																																																																							 * -
+																																																																																																																																																																																																							 * >
+																																																																																																																																																																																																							 */, OP_LARROW /*
+																																																																																																																																																																																																											 * <
+																																																																																																																																																																																																											 * -
+																																																																																																																																																																																																											 */, LPAREN/* ( */, RPAREN/* ) */, LSQUARE/* [ */, RSQUARE/* ] */, SEMI/* ; */, COMMA/* , */, EOF;
 	}
 
 	/*
@@ -54,9 +53,7 @@ public class Scanner {
 	 * scanner
 	 */
 	public static enum State {
-		START, IN_DIGIT, IN_IDENT, 
-		AFTER_FWD_SLASH, AFTER_EQUALS, AFTER_LESS_THAN, AFTER_GRATER_THAN, AFTER_EXCLAIMATION, AFTER_MINUS, AFTER_MUL, INSIDE_STRING_LITERAL,
-		AFTER_SLASH_R, INSIDE_COMMENT, INSIDE_ESCAPE_SEQUENCE
+		START, IN_DIGIT, IN_IDENT, AFTER_FWD_SLASH, AFTER_EQUALS, AFTER_LESS_THAN, AFTER_GRATER_THAN, AFTER_EXCLAIMATION, AFTER_MINUS, AFTER_MUL, INSIDE_STRING_LITERAL, AFTER_SLASH_R, INSIDE_COMMENT, INSIDE_ESCAPE_SEQUENCE
 	}
 
 	/**
@@ -92,7 +89,6 @@ public class Scanner {
 			} else
 				return String.copyValueOf(chars, pos, length);
 		}
-		
 
 		/**
 		 * To get the text of a StringLiteral, we need to remove the enclosing "
@@ -283,414 +279,447 @@ public class Scanner {
 		StringBuffer identifierSB = new StringBuffer();
 		int line = 1;
 		int posInLine = 1;
-		System.out.println("chars length:"+chars.length);
-		int startPos=0;
+		System.out.println("chars length:" + chars.length);
+		int startPos = 0;
 		while (pos < chars.length) {
 			char ch = chars[pos];
 			switch (state) {
-			//Case START of the DFA machine starts here
+			// Case START of the DFA machine starts here
 			case START: {
 				startPos = pos;
 				switch (ch) {
-				//white space
+				// white space
 				case 32: {
 					pos++;
 					posInLine++;
 				}
-				break;
-				//horizontal tab
+					break;
+				// horizontal tab
 				case 9: {
 					pos++;
 					posInLine++;
 				}
-				break;
-				//form feed
+					break;
+				// form feed
 				case 12: {
 					pos++;
 					posInLine++;
 				}
-				break;
-				
+					break;
+
 				case '?': {
-					tokens.add(new Token(Kind.OP_Q,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.OP_Q, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
+					break;
 				case ':': {
-					tokens.add(new Token(Kind.OP_COLON,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.OP_COLON, startPos, pos
+							- startPos + 1, line, posInLine));
 					posInLine++;
 					pos++;
 				}
-				break;
+					break;
 				case '&': {
-					tokens.add(new Token(Kind.OP_AND,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.OP_AND, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
+					break;
 				case '|': {
-					tokens.add(new Token(Kind.OP_OR,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.OP_OR, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
+					break;
 				case '+': {
-					tokens.add(new Token(Kind.OP_PLUS,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.OP_PLUS, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
+					break;
 				case '%': {
-					tokens.add(new Token(Kind.OP_MOD,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.OP_MOD, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
+					break;
 				case '@': {
-					tokens.add(new Token(Kind.OP_AT,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.OP_AT, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
+					break;
 				case '(': {
-					tokens.add(new Token(Kind.LPAREN,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.LPAREN, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
+					break;
 				case ')': {
-					tokens.add(new Token(Kind.RPAREN,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.RPAREN, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
+					break;
 				case '[': {
-					tokens.add(new Token(Kind.LSQUARE,startPos, pos-startPos+1, line, posInLine));
-					pos++;posInLine++;
+					tokens.add(new Token(Kind.LSQUARE, startPos, pos - startPos
+							+ 1, line, posInLine));
+					pos++;
+					posInLine++;
 				}
-				break;
+					break;
 				case ']': {
-					tokens.add(new Token(Kind.RSQUARE,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.RSQUARE, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
+					break;
 				case ';': {
-					tokens.add(new Token(Kind.SEMI,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.SEMI, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
+					break;
 				case ',': {
-					tokens.add(new Token(Kind.COMMA,startPos, pos-startPos+1, line, posInLine));
+					tokens.add(new Token(Kind.COMMA, startPos, pos - startPos
+							+ 1, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
-				
-				
-				case EOFchar:{
-					//tokens.add(new Token(Kind.EOF,startPos, pos-startPos+1, line, posInLine));
-					tokens.add(new Token(Kind.EOF, pos,0, line, posInLine));
+					break;
+
+				case EOFchar: {
+					// tokens.add(new Token(Kind.EOF,startPos, pos-startPos+1,
+					// line, posInLine));
+					tokens.add(new Token(Kind.EOF, pos, 0, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				break;
-				
-				//handling cases for new line
-				case '\n':{
-					posInLine=1;
+					break;
+
+				// handling cases for new line
+				case '\n': {
+					posInLine = 1;
 					line++;
 					pos++;
 				}
-				break;
-				//handling cases for new line
-				case '\r':{
-					state=State.AFTER_SLASH_R;
-					posInLine=1;
+					break;
+				// handling cases for new line
+				case '\r': {
+					state = State.AFTER_SLASH_R;
+					posInLine = 1;
 					line++;
 					pos++;
 				}
-				break;
-				
-				case '=':{
-					state=State.AFTER_EQUALS;
+					break;
+
+				case '=': {
+					state = State.AFTER_EQUALS;
 					pos++;
 					posInLine++;
 				}
-				break;
-				
-				case '/':{
-					state=state.AFTER_FWD_SLASH;
+					break;
+
+				case '/': {
+					state = state.AFTER_FWD_SLASH;
 					pos++;
 					posInLine++;
 				}
-				break;
-				
-				case '<':{
-					state=state.AFTER_LESS_THAN;
+					break;
+
+				case '<': {
+					state = state.AFTER_LESS_THAN;
 					pos++;
 					posInLine++;
-					
+
 				}
-				break;
-				
+					break;
+
 				case '>': {
-					
-					state=State.AFTER_GRATER_THAN;
+
+					state = State.AFTER_GRATER_THAN;
 					pos++;
 					posInLine++;
-					
+
 				}
-				break;
-				
+					break;
+
 				case '!': {
-					
-					state=State.AFTER_EXCLAIMATION;
+
+					state = State.AFTER_EXCLAIMATION;
 					pos++;
 					posInLine++;
-					
+
 				}
-				break;
-				
+					break;
+
 				case '-': {
-					
-					state=State.AFTER_MINUS;
+
+					state = State.AFTER_MINUS;
 					pos++;
 					posInLine++;
-					
+
 				}
-				break;
-				
+					break;
+
 				case '*': {
-					
-					state=State.AFTER_MUL;
+
+					state = State.AFTER_MUL;
 					pos++;
 					posInLine++;
-					
+
 				}
-				break;
-				
-				case '"':{
-					state=State.INSIDE_STRING_LITERAL;
+					break;
+
+				case '"': {
+					state = State.INSIDE_STRING_LITERAL;
 					pos++;
 					posInLine++;
 				}
-				break;
-				
-				default:{
-					if (Character.isDigit(ch)){
-						if (ch=='0'){
-							tokens.add(new Token(Kind.INTEGER_LITERAL,startPos, pos-startPos+1, line, posInLine));
+					break;
+
+				default: {
+					if (Character.isDigit(ch)) {
+						if (ch == '0') {
+							tokens.add(new Token(Kind.INTEGER_LITERAL,
+									startPos, pos - startPos + 1, line,
+									posInLine));
 							pos++;
 							posInLine++;
-						}
-						else state=State.IN_DIGIT;
+						} else
+							state = State.IN_DIGIT;
 					}
-					
-					else if (isIdentifierStart(ch)){
+
+					else if (isIdentifierStart(ch)) {
 						identifierSB.delete(0, identifierSB.length());
-						state=State.IN_IDENT;
+						state = State.IN_IDENT;
 					}
-					
-					else throw new LexicalException("The Scanner cannot scan the Character found at line:"+line+" character: "+posInLine +" "+ch, pos);
+
+					else
+						throw new LexicalException(
+								"The Scanner cannot scan the Character found at line:"
+										+ line + " character: " + posInLine
+										+ " " + ch, pos);
 				}
-				
-				
+
 				}
 			}
 				break;
-			//Case START of the DFA machine ends here	
-			
+			// Case START of the DFA machine ends here
+
 			case IN_DIGIT: {
 				if (Character.isDigit(ch)) {
 					pos++;
 					posInLine++;
-				}
-				else{
-					state=State.START;
-					tokens.add(new Token(Kind.INTEGER_LITERAL,startPos, pos-startPos, line, posInLine-(pos-startPos)));
+				} else {
+					state = State.START;
+					tokens.add(new Token(Kind.INTEGER_LITERAL, startPos, pos
+							- startPos, line, posInLine - (pos - startPos)));
 				}
 			}
 				break;
 			case IN_IDENT: {
-				
-				
+
 				if (isIdentifierPart(ch)) {
 					identifierSB.append(ch);
 					pos++;
 					posInLine++;
-				}
-				else{
-					state=State.START;
-					String identifier=identifierSB.toString();
-					if(isAReservedWord(identifier)){
-						tokens.add(new Token(typeOfReservedWord(identifier),startPos, pos-startPos, line, posInLine-(pos-startPos)));	
-					}
-					else{
-					tokens.add(new Token(Kind.IDENTIFIER,startPos, pos-startPos, line, posInLine-(pos-startPos)));
+				} else {
+					state = State.START;
+					String identifier = identifierSB.toString();
+					if (isAReservedWord(identifier)) {
+						tokens.add(new Token(typeOfReservedWord(identifier),
+								startPos, pos - startPos, line, posInLine
+										- (pos - startPos)));
+					} else {
+						tokens.add(new Token(Kind.IDENTIFIER, startPos, pos
+								- startPos, line, posInLine - (pos - startPos)));
 					}
 				}
 
 			}
 				break;
-			
+
 			case AFTER_LESS_THAN: {
-				state=State.START;
-				if (chars[pos]=='='){
-					tokens.add(new Token(Kind.OP_LE,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+				state = State.START;
+				if (chars[pos] == '=') {
+					tokens.add(new Token(Kind.OP_LE, startPos, pos - startPos
+							+ 1, line, posInLine - (pos - startPos)));
 					pos++;
 					posInLine++;
-				}
-				else if (chars[pos]=='-'){
-					tokens.add(new Token(Kind.OP_LARROW,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+				} else if (chars[pos] == '-') {
+					tokens.add(new Token(Kind.OP_LARROW, startPos, pos
+							- startPos + 1, line, posInLine - (pos - startPos)));
 					pos++;
 					posInLine++;
-				}
-				else{
-					tokens.add(new Token(Kind.OP_LT,startPos, pos-1-startPos+1, line, posInLine-1));
+				} else {
+					tokens.add(new Token(Kind.OP_LT, startPos, pos - 1
+							- startPos + 1, line, posInLine - 1));
 				}
 			}
 				break;
-				
-			case AFTER_GRATER_THAN:{
-				state=State.START;
-				if(chars[pos]=='='){
-					tokens.add(new Token(Kind.OP_GE,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+
+			case AFTER_GRATER_THAN: {
+				state = State.START;
+				if (chars[pos] == '=') {
+					tokens.add(new Token(Kind.OP_GE, startPos, pos - startPos
+							+ 1, line, posInLine - (pos - startPos)));
 					pos++;
 					posInLine++;
-				}
-				else{
-					tokens.add(new Token(Kind.OP_GT,startPos, pos-1-startPos+1, line, posInLine-1));
+				} else {
+					tokens.add(new Token(Kind.OP_GT, startPos, pos - 1
+							- startPos + 1, line, posInLine - 1));
 				}
 			}
-			break;
-			
-			case AFTER_MUL:{
-				state=State.START;
-				if(chars[pos]=='*'){
-					tokens.add(new Token(Kind.OP_POWER,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+				break;
+
+			case AFTER_MUL: {
+				state = State.START;
+				if (chars[pos] == '*') {
+					tokens.add(new Token(Kind.OP_POWER, startPos, pos
+							- startPos + 1, line, posInLine - (pos - startPos)));
 					pos++;
 					posInLine++;
-				}
-				else{
-					tokens.add(new Token(Kind.OP_TIMES,startPos, pos-1-startPos+1, line, posInLine-1));
+				} else {
+					tokens.add(new Token(Kind.OP_TIMES, startPos, pos - 1
+							- startPos + 1, line, posInLine - 1));
 				}
 			}
-			break;
-			
-			case AFTER_EXCLAIMATION:{
-				state=State.START;
-				if(chars[pos]=='='){
-					tokens.add(new Token(Kind.OP_NEQ,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+				break;
+
+			case AFTER_EXCLAIMATION: {
+				state = State.START;
+				if (chars[pos] == '=') {
+					tokens.add(new Token(Kind.OP_NEQ, startPos, pos - startPos
+							+ 1, line, posInLine - (pos - startPos)));
 					pos++;
 					posInLine++;
-				}
-				else{
-					tokens.add(new Token(Kind.OP_EXCL,startPos, pos-1-startPos+1, line, posInLine-1));
+				} else {
+					tokens.add(new Token(Kind.OP_EXCL, startPos, pos - 1
+							- startPos + 1, line, posInLine - 1));
 				}
 			}
-			break;
-			
-			case AFTER_MINUS:{
-				state=State.START;
-				if(chars[pos]=='>'){
-					tokens.add(new Token(Kind.OP_RARROW,startPos, pos-startPos+1, line, posInLine-(pos-startPos)));
+				break;
+
+			case AFTER_MINUS: {
+				state = State.START;
+				if (chars[pos] == '>') {
+					tokens.add(new Token(Kind.OP_RARROW, startPos, pos
+							- startPos + 1, line, posInLine - (pos - startPos)));
 					pos++;
 					posInLine++;
-				}
-				else{
-					tokens.add(new Token(Kind.OP_MINUS,startPos, pos-1-startPos+1, line, posInLine-1));
+				} else {
+					tokens.add(new Token(Kind.OP_MINUS, startPos, pos - 1
+							- startPos + 1, line, posInLine - 1));
 				}
 			}
-			break;
-			
-			case AFTER_SLASH_R:{
-				if (ch=='\n') pos++;
-				else state=State.START;
-			}
-			break;
-			
-			case AFTER_FWD_SLASH:{
-				if (ch=='/'){
-					//start of a comment, ignore all stuff in the next state till new line is encountered
-					state=State.INSIDE_COMMENT;
+				break;
+
+			case AFTER_SLASH_R: {
+				if (ch == '\n')
 					pos++;
-					posInLine++;
-					
-				}
-				else{
-					tokens.add(new Token(Kind.OP_DIV, startPos, pos-startPos, line, posInLine-1));
-					state=State.START;
-				}
-			}
-			break;
-			
-			case INSIDE_COMMENT:{
-				if (ch=='\n'){
-					posInLine=1;
-					line++;
-					pos++;
-					state=State.START;
-				}
-				
-				else if (ch=='\r'){
-					state=State.AFTER_SLASH_R;
-					posInLine=1;
-					line++;
-					pos++;
-				}
-				else {
-					posInLine++;
-					pos++;
-				}
-			}
-			break;
-			
-			case AFTER_EQUALS:{
-				if(ch=='='){
-					int len = pos-startPos+1;
-					tokens.add(new Token(Kind.OP_EQ, startPos,len, line, posInLine-len+1));
-					pos++;
-					posInLine++;
-					state=State.START;
-					
-				}
-				else {
-					int len = pos-1-startPos+1;
-					tokens.add(new Token(Kind.OP_ASSIGN,startPos, len, line, posInLine-len));
-					state=State.START;	
-				}
-			}
-			break;
-			
-			case INSIDE_STRING_LITERAL:{
-				if(ch=='"'){
-					pos++;
-					posInLine++;
-					state=State.START;
-					tokens.add(new Token(Kind.STRING_LITERAL,startPos, pos-startPos, line, posInLine-(pos-startPos)));	
-					
-				}
-				else if (ch==EOFchar){throw new LexicalException("String literal unclosed at line:"+line, pos);}
-				else if (ch=='\n'){throw new LexicalException("String literal encountered new line at line:"+line, pos);}
-				else if (ch=='\r'){throw new LexicalException("String literal encountered new line at line:"+line, pos);}
-				else if (ch=='\\'){
-					pos++;
-					posInLine++;
-					state=State.INSIDE_ESCAPE_SEQUENCE;
-				}
 				else
-				{
+					state = State.START;
+			}
+				break;
+
+			case AFTER_FWD_SLASH: {
+				if (ch == '/') {
+					// start of a comment, ignore all stuff in the next state
+					// till new line is encountered
+					state = State.INSIDE_COMMENT;
+					pos++;
+					posInLine++;
+
+				} else {
+					tokens.add(new Token(Kind.OP_DIV, startPos, pos - startPos,
+							line, posInLine - 1));
+					state = State.START;
+				}
+			}
+				break;
+
+			case INSIDE_COMMENT: {
+				if (ch == '\n') {
+					posInLine = 1;
+					line++;
+					pos++;
+					state = State.START;
+				}
+
+				else if (ch == '\r') {
+					state = State.AFTER_SLASH_R;
+					posInLine = 1;
+					line++;
+					pos++;
+				} else {
+					posInLine++;
+					pos++;
+				}
+			}
+				break;
+
+			case AFTER_EQUALS: {
+				if (ch == '=') {
+					int len = pos - startPos + 1;
+					tokens.add(new Token(Kind.OP_EQ, startPos, len, line,
+							posInLine - len + 1));
+					pos++;
+					posInLine++;
+					state = State.START;
+
+				} else {
+					int len = pos - 1 - startPos + 1;
+					tokens.add(new Token(Kind.OP_ASSIGN, startPos, len, line,
+							posInLine - len));
+					state = State.START;
+				}
+			}
+				break;
+
+			case INSIDE_STRING_LITERAL: {
+				if (ch == '"') {
+					pos++;
+					posInLine++;
+					state = State.START;
+					tokens.add(new Token(Kind.STRING_LITERAL, startPos, pos
+							- startPos, line, posInLine - (pos - startPos)));
+
+				} else if (ch == EOFchar) {
+					throw new LexicalException(
+							"String literal unclosed at line:" + line, pos);
+				} else if (ch == '\n') {
+					throw new LexicalException(
+							"String literal encountered new line at line:"
+									+ line, pos);
+				} else if (ch == '\r') {
+					throw new LexicalException(
+							"String literal encountered new line at line:"
+									+ line, pos);
+				} else if (ch == '\\') {
+					pos++;
+					posInLine++;
+					state = State.INSIDE_ESCAPE_SEQUENCE;
+				} else {
 					pos++;
 					posInLine++;
 				}
-				
+
 			}
-			break;
-			
-			case INSIDE_ESCAPE_SEQUENCE:{
+				break;
+
+			case INSIDE_ESCAPE_SEQUENCE: {
 				HashSet<Character> hs = new HashSet<Character>();
 				hs.add('b');
 				hs.add('t');
@@ -700,124 +729,125 @@ public class Scanner {
 				hs.add('"');
 				hs.add('\'');
 				hs.add('\\');
-				
-				if (hs.contains(ch)){
+
+				if (hs.contains(ch)) {
 					pos++;
 					posInLine++;
-					state=State.INSIDE_STRING_LITERAL;
-				}
-				else {
-					throw new LexicalException("Illegal Escape Sequence encountered at line:"+line+" position:"+posInLine, pos);
+					state = State.INSIDE_STRING_LITERAL;
+				} else {
+					throw new LexicalException(
+							"Illegal Escape Sequence encountered at line:"
+									+ line + " position:" + posInLine, pos);
 				}
 			}
-			break;
-			
-			
+				break;
 
 			}
 		}
-		
+
 		/*
-		 * int line = 1; int posInLine = 1; 
-		 * tokens.add(new Token(Kind.EOF, pos,0, line, posInLine));
+		 * int line = 1; int posInLine = 1; tokens.add(new Token(Kind.EOF,
+		 * pos,0, line, posInLine));
 		 */
-		
+
 		return this;
 
 	}
 
 	/**
-	 * The following function checks if the input argument can be a valid start of an identifier for our language or no
+	 * The following function checks if the input argument can be a valid start
+	 * of an identifier for our language or no
 	 */
-	
-	 private boolean isIdentifierStart(char c){
-		HashSet <Character> startSet = new HashSet<Character>();
-		
-		for(int i=97; i<=122; i++){
-			startSet.add((char)i);
+
+	private boolean isIdentifierStart(char c) {
+		HashSet<Character> startSet = new HashSet<Character>();
+
+		for (int i = 97; i <= 122; i++) {
+			startSet.add((char) i);
 		}
-		for(int i=65;i<=90; i++){
-			startSet.add((char)i);
+		for (int i = 65; i <= 90; i++) {
+			startSet.add((char) i);
 		}
 		startSet.add('$');
 		startSet.add('_');
-		
+
 		return startSet.contains(c);
 	}
-	 
-	 /**
-	  * The following function checks if the character passed in the arguments can be a part of a valid identifier in the language
-	  */
-	 
-	 private boolean isIdentifierPart(char c){
-			HashSet <Character> startSet = new HashSet<Character>();
-			
-			for(int i=97; i<=122; i++){
-				startSet.add((char)i);
-			}
-			for(int i=65;i<=90; i++){
-				startSet.add((char)i);
-			}
-			startSet.add('$');
-			startSet.add('_');
-			for(int i=48;i<=57; i++){
-				startSet.add((char)i);
-			}
-			return startSet.contains(c);
+
+	/**
+	 * The following function checks if the character passed in the arguments
+	 * can be a part of a valid identifier in the language
+	 */
+
+	private boolean isIdentifierPart(char c) {
+		HashSet<Character> startSet = new HashSet<Character>();
+
+		for (int i = 97; i <= 122; i++) {
+			startSet.add((char) i);
 		}
-	 
-	 /*
-	  * Initializes the hashmap for reserved words
-	  */
-	 private HashMap <String, Kind> initializeReservedWordList(){
-		 
-		 HashMap <String, Kind> reservedWords = new HashMap<String, Kind> ();
-		  reservedWords.put("true", Kind.BOOLEAN_LITERAL);
-		  reservedWords.put("false", Kind.BOOLEAN_LITERAL);
-		  reservedWords.put("x", Kind.KW_x);
-		  reservedWords.put("X", Kind.KW_X);
-		  reservedWords.put("y", Kind.KW_y);
-		  reservedWords.put("Y", Kind.KW_Y);
-		  reservedWords.put("r", Kind.KW_r);
-		  reservedWords.put("R", Kind.KW_R);
-		  reservedWords.put("a", Kind.KW_a);
-		  reservedWords.put("A", Kind.KW_A);
-		  reservedWords.put("Z", Kind.KW_Z);
-		  reservedWords.put("DEF_X", Kind.KW_DEF_X);
-		  reservedWords.put("DEF_Y", Kind.KW_DEF_Y);
-		  reservedWords.put("SCREEN", Kind.KW_SCREEN);
-		  reservedWords.put("cart_x", Kind.KW_cart_x);
-		  reservedWords.put("cart_y", Kind.KW_cart_y);
-		  reservedWords.put("polar_a", Kind.KW_polar_a);
-		  reservedWords.put("polar_r", Kind.KW_polar_r);
-		  reservedWords.put("abs", Kind.KW_abs);
-		  reservedWords.put("sin", Kind.KW_sin);
-		  reservedWords.put("cos", Kind.KW_cos);
-		  reservedWords.put("atan", Kind.KW_atan);
-		  reservedWords.put("log", Kind.KW_log);
-		  reservedWords.put("image", Kind.KW_image);
-		  reservedWords.put("int", Kind.KW_int);
-		  reservedWords.put("boolean", Kind.KW_boolean);
-		  reservedWords.put("url", Kind.KW_url);
-		  reservedWords.put("file", Kind.KW_file);
-		  
-		 return reservedWords;
-	 }
-	 
-	 /*
-	  * returns a boolean which states if an identifier string is a reserved word or no
-	  */
-	 private boolean isAReservedWord(String word){
-		 return this.initializeReservedWordList().containsKey(word);
-	 }
-	 
-	 /*
-	  * returns the type of reserved word if a string is a reserved word
-	  */
-	 private Kind typeOfReservedWord(String word){
-		 return this.initializeReservedWordList().get(word);
-		 }
-	 
+		for (int i = 65; i <= 90; i++) {
+			startSet.add((char) i);
+		}
+		startSet.add('$');
+		startSet.add('_');
+		for (int i = 48; i <= 57; i++) {
+			startSet.add((char) i);
+		}
+		return startSet.contains(c);
+	}
+
+	/*
+	 * Initializes the hashmap for reserved words
+	 */
+	private HashMap<String, Kind> initializeReservedWordList() {
+
+		HashMap<String, Kind> reservedWords = new HashMap<String, Kind>();
+		reservedWords.put("true", Kind.BOOLEAN_LITERAL);
+		reservedWords.put("false", Kind.BOOLEAN_LITERAL);
+		reservedWords.put("x", Kind.KW_x);
+		reservedWords.put("X", Kind.KW_X);
+		reservedWords.put("y", Kind.KW_y);
+		reservedWords.put("Y", Kind.KW_Y);
+		reservedWords.put("r", Kind.KW_r);
+		reservedWords.put("R", Kind.KW_R);
+		reservedWords.put("a", Kind.KW_a);
+		reservedWords.put("A", Kind.KW_A);
+		reservedWords.put("Z", Kind.KW_Z);
+		reservedWords.put("DEF_X", Kind.KW_DEF_X);
+		reservedWords.put("DEF_Y", Kind.KW_DEF_Y);
+		reservedWords.put("SCREEN", Kind.KW_SCREEN);
+		reservedWords.put("cart_x", Kind.KW_cart_x);
+		reservedWords.put("cart_y", Kind.KW_cart_y);
+		reservedWords.put("polar_a", Kind.KW_polar_a);
+		reservedWords.put("polar_r", Kind.KW_polar_r);
+		reservedWords.put("abs", Kind.KW_abs);
+		reservedWords.put("sin", Kind.KW_sin);
+		reservedWords.put("cos", Kind.KW_cos);
+		reservedWords.put("atan", Kind.KW_atan);
+		reservedWords.put("log", Kind.KW_log);
+		reservedWords.put("image", Kind.KW_image);
+		reservedWords.put("int", Kind.KW_int);
+		reservedWords.put("boolean", Kind.KW_boolean);
+		reservedWords.put("url", Kind.KW_url);
+		reservedWords.put("file", Kind.KW_file);
+
+		return reservedWords;
+	}
+
+	/*
+	 * returns a boolean which states if an identifier string is a reserved word
+	 * or no
+	 */
+	private boolean isAReservedWord(String word) {
+		return this.initializeReservedWordList().containsKey(word);
+	}
+
+	/*
+	 * returns the type of reserved word if a string is a reserved word
+	 */
+	private Kind typeOfReservedWord(String word) {
+		return this.initializeReservedWordList().get(word);
+	}
 
 	/**
 	 * Returns true if the internal iterator has more Tokens

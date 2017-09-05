@@ -392,9 +392,9 @@ public class ScannerTest {
 		checkNext(scanner, STRING_LITERAL, 4, 18, 1, 5);
 		checkNext(scanner, SEMI, 22, 1, 1, 23);
 		checkNextIsEOF(scanner);
-		
+
 	}
-	
+
 	@Test
 	public void StringLiteralTest2() throws LexicalException {
 		String input = "x = \"John Doe said,\\\"Hi, How are you?\\\"\";";
@@ -404,11 +404,12 @@ public class ScannerTest {
 		checkNext(scanner, KW_x, 0, 1, 1, 1);
 		checkNext(scanner, OP_ASSIGN, 2, 1, 1, 3);
 		checkNext(scanner, STRING_LITERAL, 4, 36, 1, 5);
-		checkNext(scanner, SEMI,40, 1, 1, 41);
+		checkNext(scanner, SEMI, 40, 1, 1, 41);
 		checkNextIsEOF(scanner);
-		
+
 	}
-	/** 
+
+	/**
 	 * The test will work without putting the try-catch block around new
 	 * Scanner(input).scan(); but then you won't be able to check or display the
 	 * thrown exception.

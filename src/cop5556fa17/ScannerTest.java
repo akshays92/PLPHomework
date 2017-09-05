@@ -179,16 +179,20 @@ public class ScannerTest {
 	 * 
 	 * @throws LexicalException
 	 */
-	/*
-	 * TODO //why is this test case failing ???
-	 * 
-	 * @Test public void failUnclosedStringLiteral() throws LexicalException {
-	 * String input = "\" greetings  "; show(input);
-	 * thrown.expect(LexicalException.class); //Tell JUnit to expect a
-	 * LexicalException try { new Scanner(input).scan(); } catch
-	 * (LexicalException e) { // show(e); assertEquals(13,e.getPos()); throw e;
-	 * } }
-	 */
+	@Test
+	public void failUnclosedStringLiteral() throws LexicalException {
+		String input = "\" greetings  ";
+		show(input);
+		thrown.expect(LexicalException.class); // Tell JUnit to expect a
+												// LexicalException
+		try {
+			new Scanner(input).scan();
+		} catch (LexicalException e) { //
+			show(e);
+			assertEquals(13, e.getPos());
+			throw e;
+		}
+	}
 
 	/**
 	 * This example tests the assign and the equals operator in the DFA tree
@@ -317,42 +321,113 @@ public class ScannerTest {
 		checkNext(scanner, OP_ASSIGN, 8, 1, 1, 9);
 		checkNextIsEOF(scanner);
 	}
-	
+
 	// The following test case tests TIMES and POWER operator
-		@Test
-		public void MULTest() throws LexicalException {
-			String input = "%++*@@**=";
-			Scanner scanner = new Scanner(input).scan();
-			show(input);
-			show(scanner);
-			checkNext(scanner, OP_MOD, 0, 1, 1, 1);
-			checkNext(scanner, OP_PLUS, 1, 1, 1, 2);
-			checkNext(scanner, OP_PLUS, 2, 1, 1, 3);
-			checkNext(scanner, OP_TIMES, 3, 1, 1, 4);
-			checkNext(scanner, OP_AT, 4, 1, 1, 5);
-			checkNext(scanner, OP_AT, 5, 1, 1, 6);
-			checkNext(scanner, OP_POWER, 6, 2, 1, 7);
-			checkNext(scanner, OP_ASSIGN, 8, 1, 1, 9);
-			checkNextIsEOF(scanner);
-		}
+	@Test
+	public void MULTest() throws LexicalException {
+		String input = "%++*@@**=";
+		Scanner scanner = new Scanner(input).scan();
+		show(input);
+		show(scanner);
+		checkNext(scanner, OP_MOD, 0, 1, 1, 1);
+		checkNext(scanner, OP_PLUS, 1, 1, 1, 2);
+		checkNext(scanner, OP_PLUS, 2, 1, 1, 3);
+		checkNext(scanner, OP_TIMES, 3, 1, 1, 4);
+		checkNext(scanner, OP_AT, 4, 1, 1, 5);
+		checkNext(scanner, OP_AT, 5, 1, 1, 6);
+		checkNext(scanner, OP_POWER, 6, 2, 1, 7);
+		checkNext(scanner, OP_ASSIGN, 8, 1, 1, 9);
+		checkNextIsEOF(scanner);
+	}
+
+	// The following test case Tests for integer literals
+	@Test
+	public void IntLiteralTest() throws LexicalException {
+		String input = "%++0@@\n01230=";
+		Scanner scanner = new Scanner(input).scan();
+		show(input);
+		show(scanner);
+		checkNext(scanner, OP_MOD, 0, 1, 1, 1);
+		checkNext(scanner, OP_PLUS, 1, 1, 1, 2);
+		checkNext(scanner, OP_PLUS, 2, 1, 1, 3);
+		checkNext(scanner, INTEGER_LITERAL, 3, 1, 1, 4);
+		checkNext(scanner, OP_AT, 4, 1, 1, 5);
+		checkNext(scanner, OP_AT, 5, 1, 1, 6);
+		checkNext(scanner, INTEGER_LITERAL, 7, 1, 2, 1);
+		checkNext(scanner, INTEGER_LITERAL, 8, 4, 2, 2);
+		checkNext(scanner, OP_ASSIGN, 12, 1, 2, 6);
+		checkNextIsEOF(scanner);
+	}
+
+	// The following test case tests for identifiers reserved words and keywords
+	@Test
+	public void IsReservedWord() throws LexicalException {
+		String input = "%;akshay X a ;\r\n= true,0123";
+		Scanner scanner = new Scanner(input).scan();
+		show(input);
+		show(scanner);
+		checkNext(scanner, OP_MOD, 0, 1, 1, 1);
+		checkNext(scanner, SEMI, 1, 1, 1, 2);
+		checkNext(scanner, IDENTIFIER, 2, 6, 1, 3);
+		checkNext(scanner, KW_X, 9, 1, 1, 10);
+		checkNext(scanner, KW_a, 11, 1, 1, 12);
+		checkNext(scanner, SEMI, 13, 1, 1, 14);
+		checkNext(scanner, OP_ASSIGN, 16, 1, 2, 1);
+		checkNext(scanner, BOOLEAN_LITERAL, 18, 4, 2, 3);
+		checkNext(scanner, COMMA, 22, 1, 2, 7);
+		checkNext(scanner, INTEGER_LITERAL, 23, 1, 2, 8);
+		checkNext(scanner, INTEGER_LITERAL, 24, 3, 2, 9);
+		checkNextIsEOF(scanner);
+	}
+
+	// The following test cases test for valid string literals
+	@Test
+	public void StringLiteralTest1() throws LexicalException {
+		String input = "x = \"Hi, how are you?\";";
+		Scanner scanner = new Scanner(input).scan();
+		show(input);
+		show(scanner);
+		checkNext(scanner, KW_x, 0, 1, 1, 1);
+		checkNext(scanner, OP_ASSIGN, 2, 1, 1, 3);
+		checkNext(scanner, STRING_LITERAL, 4, 18, 1, 5);
+		checkNext(scanner, SEMI, 22, 1, 1, 23);
+		checkNextIsEOF(scanner);
 		
-		// The following test case Tests for integer literals
-				@Test
-				public void IntLiteralTest() throws LexicalException {
-					String input = "%++0@@\n01230=";
-					Scanner scanner = new Scanner(input).scan();
-					show(input);
-					show(scanner);
-					checkNext(scanner, OP_MOD, 0, 1, 1, 1);
-					checkNext(scanner, OP_PLUS, 1, 1, 1, 2);
-					checkNext(scanner, OP_PLUS, 2, 1, 1, 3);
-					checkNext(scanner, INTEGER_LITERAL, 3, 1, 1, 4);
-					checkNext(scanner, OP_AT, 4, 1, 1, 5);
-					checkNext(scanner, OP_AT, 5, 1, 1, 6);
-					checkNext(scanner, INTEGER_LITERAL, 7, 1, 2, 1);
-					checkNext(scanner, INTEGER_LITERAL, 8, 4, 2, 2);
-					checkNext(scanner, OP_ASSIGN, 12, 1, 2, 6);
-					checkNextIsEOF(scanner);
-				}
+	}
+	
+	@Test
+	public void StringLiteralTest2() throws LexicalException {
+		String input = "x = \"John Doe said,\\\"Hi, How are you?\\\"\";";
+		Scanner scanner = new Scanner(input).scan();
+		show(input);
+		show(scanner);
+		checkNext(scanner, KW_x, 0, 1, 1, 1);
+		checkNext(scanner, OP_ASSIGN, 2, 1, 1, 3);
+		checkNext(scanner, STRING_LITERAL, 4, 36, 1, 5);
+		checkNext(scanner, SEMI,40, 1, 1, 41);
+		checkNextIsEOF(scanner);
+		
+	}
+	/** 
+	 * The test will work without putting the try-catch block around new
+	 * Scanner(input).scan(); but then you won't be able to check or display the
+	 * thrown exception.
+	 * 
+	 * @throws LexicalException
+	 */
+	@Test
+	public void failStringLiteralEscapeSequence() throws LexicalException {
+		String input = "\" greetings \\ \"";
+		show(input);
+		thrown.expect(LexicalException.class); // Tell JUnit to expect a
+												// LexicalException
+		try {
+			new Scanner(input).scan();
+		} catch (LexicalException e) { //
+			show(e);
+			assertEquals(13, e.getPos());
+			throw e;
+		}
+	}
 
 }

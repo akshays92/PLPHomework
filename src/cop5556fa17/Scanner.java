@@ -15,6 +15,8 @@ package cop5556fa17;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
 
 import javax.sound.sampled.Line;
 
@@ -53,8 +55,8 @@ public class Scanner {
 	 */
 	public static enum State {
 		START, IN_DIGIT, IN_IDENT, 
-		AFTER_FWD_SLASH, AFTER_EQUALS, AFTER_LESS_THAN, AFTER_GRATER_THAN, AFTER_EXCLAIMATION, AFTER_MINUS, AFTER_MUL, AFTER_BACK_SLASH,
-		AFTER_SLASH_R, INSIDE_COMMENT
+		AFTER_FWD_SLASH, AFTER_EQUALS, AFTER_LESS_THAN, AFTER_GRATER_THAN, AFTER_EXCLAIMATION, AFTER_MINUS, AFTER_MUL, INSIDE_STRING_LITERAL,
+		AFTER_SLASH_R, INSIDE_COMMENT, INSIDE_ESCAPE_SEQUENCE
 	}
 
 	/**
@@ -90,6 +92,7 @@ public class Scanner {
 			} else
 				return String.copyValueOf(chars, pos, length);
 		}
+		
 
 		/**
 		 * To get the text of a StringLiteral, we need to remove the enclosing "
@@ -275,10 +278,9 @@ public class Scanner {
 	 * @throws LexicalException
 	 */
 	public Scanner scan() throws LexicalException {
-		/* TODO Replace this with a correct and complete implementation!!! */
 		int pos = 0;
 		State state = State.START;
-
+		StringBuffer identifierSB = new StringBuffer();
 		int line = 1;
 		int posInLine = 1;
 		System.out.println("chars length:"+chars.length);
@@ -396,13 +398,14 @@ public class Scanner {
 				}
 				break;
 				
+				//handling cases for new line
 				case '\n':{
 					posInLine=1;
 					line++;
 					pos++;
 				}
 				break;
-				
+				//handling cases for new line
 				case '\r':{
 					state=State.AFTER_SLASH_R;
 					posInLine=1;
@@ -469,6 +472,13 @@ public class Scanner {
 				}
 				break;
 				
+				case '"':{
+					state=State.INSIDE_STRING_LITERAL;
+					pos++;
+					posInLine++;
+				}
+				break;
+				
 				default:{
 					if (Character.isDigit(ch)){
 						if (ch=='0'){
@@ -478,6 +488,13 @@ public class Scanner {
 						}
 						else state=State.IN_DIGIT;
 					}
+					
+					else if (isIdentifierStart(ch)){
+						identifierSB.delete(0, identifierSB.length());
+						state=State.IN_IDENT;
+					}
+					
+					else throw new LexicalException("The Scanner cannot scan the Character found at line:"+line+" character: "+posInLine +" "+ch, pos);
 				}
 				
 				
@@ -498,6 +515,23 @@ public class Scanner {
 			}
 				break;
 			case IN_IDENT: {
+				
+				
+				if (isIdentifierPart(ch)) {
+					identifierSB.append(ch);
+					pos++;
+					posInLine++;
+				}
+				else{
+					state=State.START;
+					String identifier=identifierSB.toString();
+					if(isAReservedWord(identifier)){
+						tokens.add(new Token(typeOfReservedWord(identifier),startPos, pos-startPos, line, posInLine-(pos-startPos)));	
+					}
+					else{
+					tokens.add(new Token(Kind.IDENTIFIER,startPos, pos-startPos, line, posInLine-(pos-startPos)));
+					}
+				}
 
 			}
 				break;
@@ -631,6 +665,53 @@ public class Scanner {
 			}
 			break;
 			
+			case INSIDE_STRING_LITERAL:{
+				if(ch=='"'){
+					pos++;
+					posInLine++;
+					state=State.START;
+					tokens.add(new Token(Kind.STRING_LITERAL,startPos, pos-startPos, line, posInLine-(pos-startPos)));	
+					
+				}
+				else if (ch==EOFchar){throw new LexicalException("String literal unclosed at line:"+line, pos);}
+				else if (ch=='\n'){throw new LexicalException("String literal encountered new line at line:"+line, pos);}
+				else if (ch=='\r'){throw new LexicalException("String literal encountered new line at line:"+line, pos);}
+				else if (ch=='\\'){
+					pos++;
+					posInLine++;
+					state=State.INSIDE_ESCAPE_SEQUENCE;
+				}
+				else
+				{
+					pos++;
+					posInLine++;
+				}
+				
+			}
+			break;
+			
+			case INSIDE_ESCAPE_SEQUENCE:{
+				HashSet<Character> hs = new HashSet<Character>();
+				hs.add('b');
+				hs.add('t');
+				hs.add('n');
+				hs.add('f');
+				hs.add('r');
+				hs.add('"');
+				hs.add('\'');
+				hs.add('\\');
+				
+				if (hs.contains(ch)){
+					pos++;
+					posInLine++;
+					state=State.INSIDE_STRING_LITERAL;
+				}
+				else {
+					throw new LexicalException("Illegal Escape Sequence encountered at line:"+line+" position:"+posInLine, pos);
+				}
+			}
+			break;
+			
 			
 
 			}
@@ -640,12 +721,106 @@ public class Scanner {
 		 * int line = 1; int posInLine = 1; 
 		 * tokens.add(new Token(Kind.EOF, pos,0, line, posInLine));
 		 */
+		
 		return this;
 
 	}
 
 	/**
-	 * Returns true if the internal interator has more Tokens
+	 * The following function checks if the input argument can be a valid start of an identifier for our language or no
+	 */
+	
+	 private boolean isIdentifierStart(char c){
+		HashSet <Character> startSet = new HashSet<Character>();
+		
+		for(int i=97; i<=122; i++){
+			startSet.add((char)i);
+		}
+		for(int i=65;i<=90; i++){
+			startSet.add((char)i);
+		}
+		startSet.add('$');
+		startSet.add('_');
+		
+		return startSet.contains(c);
+	}
+	 
+	 /**
+	  * The following function checks if the character passed in the arguments can be a part of a valid identifier in the language
+	  */
+	 
+	 private boolean isIdentifierPart(char c){
+			HashSet <Character> startSet = new HashSet<Character>();
+			
+			for(int i=97; i<=122; i++){
+				startSet.add((char)i);
+			}
+			for(int i=65;i<=90; i++){
+				startSet.add((char)i);
+			}
+			startSet.add('$');
+			startSet.add('_');
+			for(int i=48;i<=57; i++){
+				startSet.add((char)i);
+			}
+			return startSet.contains(c);
+		}
+	 
+	 /*
+	  * Initializes the hashmap for reserved words
+	  */
+	 private HashMap <String, Kind> initializeReservedWordList(){
+		 
+		 HashMap <String, Kind> reservedWords = new HashMap<String, Kind> ();
+		  reservedWords.put("true", Kind.BOOLEAN_LITERAL);
+		  reservedWords.put("false", Kind.BOOLEAN_LITERAL);
+		  reservedWords.put("x", Kind.KW_x);
+		  reservedWords.put("X", Kind.KW_X);
+		  reservedWords.put("y", Kind.KW_y);
+		  reservedWords.put("Y", Kind.KW_Y);
+		  reservedWords.put("r", Kind.KW_r);
+		  reservedWords.put("R", Kind.KW_R);
+		  reservedWords.put("a", Kind.KW_a);
+		  reservedWords.put("A", Kind.KW_A);
+		  reservedWords.put("Z", Kind.KW_Z);
+		  reservedWords.put("DEF_X", Kind.KW_DEF_X);
+		  reservedWords.put("DEF_Y", Kind.KW_DEF_Y);
+		  reservedWords.put("SCREEN", Kind.KW_SCREEN);
+		  reservedWords.put("cart_x", Kind.KW_cart_x);
+		  reservedWords.put("cart_y", Kind.KW_cart_y);
+		  reservedWords.put("polar_a", Kind.KW_polar_a);
+		  reservedWords.put("polar_r", Kind.KW_polar_r);
+		  reservedWords.put("abs", Kind.KW_abs);
+		  reservedWords.put("sin", Kind.KW_sin);
+		  reservedWords.put("cos", Kind.KW_cos);
+		  reservedWords.put("atan", Kind.KW_atan);
+		  reservedWords.put("log", Kind.KW_log);
+		  reservedWords.put("image", Kind.KW_image);
+		  reservedWords.put("int", Kind.KW_int);
+		  reservedWords.put("boolean", Kind.KW_boolean);
+		  reservedWords.put("url", Kind.KW_url);
+		  reservedWords.put("file", Kind.KW_file);
+		  
+		 return reservedWords;
+	 }
+	 
+	 /*
+	  * returns a boolean which states if an identifier string is a reserved word or no
+	  */
+	 private boolean isAReservedWord(String word){
+		 return this.initializeReservedWordList().containsKey(word);
+	 }
+	 
+	 /*
+	  * returns the type of reserved word if a string is a reserved word
+	  */
+	 private Kind typeOfReservedWord(String word){
+		 return this.initializeReservedWordList().get(word);
+		 }
+	 
+
+	/**
+	 * Returns true if the internal iterator has more Tokens
 	 * 
 	 * @return
 	 */

@@ -437,14 +437,14 @@ public class Scanner {
 					break;
 
 				case '/': {
-					state = state.AFTER_FWD_SLASH;
+					state = State.AFTER_FWD_SLASH;
 					pos++;
 					posInLine++;
 				}
 					break;
 
 				case '<': {
-					state = state.AFTER_LESS_THAN;
+					state = State.AFTER_LESS_THAN;
 					pos++;
 					posInLine++;
 
@@ -502,8 +502,10 @@ public class Scanner {
 									posInLine));
 							pos++;
 							posInLine++;
-						} else
+						} else{
 							state = State.IN_DIGIT;
+							identifierSB.delete(0, identifierSB.length());
+						}
 					}
 
 					else if (isIdentifierStart(ch)) {
@@ -525,12 +527,19 @@ public class Scanner {
 
 			case IN_DIGIT: {
 				if (Character.isDigit(ch)) {
+					identifierSB.append(ch);
 					pos++;
 					posInLine++;
 				} else {
 					state = State.START;
+					try{
+						int x = Integer.parseInt(identifierSB.toString());
+						assert Integer.MIN_VALUE<=x;
+						assert x<=Integer.MAX_VALUE;
 					tokens.add(new Token(Kind.INTEGER_LITERAL, startPos, pos
 							- startPos, line, posInLine - (pos - startPos)));
+					} catch(Exception e){throw new LexicalException(
+							"Integer out of bounds at line:" + line, pos);}
 				}
 			}
 				break;
@@ -742,7 +751,7 @@ public class Scanner {
 				} else {
 					throw new LexicalException(
 							"Illegal Escape Sequence encountered at line:"
-									+ line + " position:" + posInLine, pos);
+									+ line + " position:" + posInLine, pos-1);
 				}
 			}
 				break;

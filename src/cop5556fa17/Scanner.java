@@ -751,7 +751,7 @@ public class Scanner {
 				} else {
 					throw new LexicalException(
 							"Illegal Escape Sequence encountered at line:"
-									+ line + " position:" + posInLine, pos-1);
+									+ line + " position:" + posInLine, pos);
 				}
 			}
 				break;

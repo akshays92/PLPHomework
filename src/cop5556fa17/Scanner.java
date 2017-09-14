@@ -665,6 +665,12 @@ public class Scanner {
 				break;
 
 			case INSIDE_COMMENT: {
+				if((ch==EOFchar)&&(chars.length==(pos+1))){
+					tokens.add(new Token(Kind.EOF, pos, 0, line, posInLine));
+					pos++;
+					posInLine++;
+				}
+				
 				if (ch == '\n') {
 					posInLine = 1;
 					line++;

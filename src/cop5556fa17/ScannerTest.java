@@ -343,7 +343,7 @@ public class ScannerTest {
 	// The following test case Tests for integer literals
 	@Test
 	public void IntLiteralTest() throws LexicalException {
-		String input = "%++0@@\n01230=";
+		String input = "%++0@@\n01230=\n//";
 		Scanner scanner = new Scanner(input).scan();
 		show(input);
 		show(scanner);

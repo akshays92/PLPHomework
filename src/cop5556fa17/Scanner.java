@@ -20,6 +20,8 @@ import java.util.HashSet;
 
 import javax.sound.sampled.Line;
 
+import cop5556fa17.Scanner.Kind;
+
 public class Scanner {
 
 	@SuppressWarnings("serial")
@@ -39,26 +41,19 @@ public class Scanner {
 	}
 
 	public static enum Kind {
-		IDENTIFIER, INTEGER_LITERAL, BOOLEAN_LITERAL, STRING_LITERAL, KW_x/* x */, KW_X/* X */, KW_y/* y */, 
-		KW_Y/* Y */, KW_r/* r */, KW_R/* R */, KW_a/* a */, KW_A/* A */, KW_Z/* Z */, KW_DEF_X/* DEF_X */, 
-		KW_DEF_Y/* DEF_Y */, KW_SCREEN/* SCREEN */, KW_cart_x/* cart_x */, KW_cart_y/* cart_y */, KW_polar_a/* polar_a */, 
-		KW_polar_r/* polar_r */, KW_abs/* abs */, KW_sin/* sin */, KW_cos/* cos */, KW_atan/* atan */, 
-		KW_log/* log */, KW_image/* image */, KW_int/* int */, KW_boolean/* boolean */, KW_url/* url */, 
-		KW_file/* file */, OP_ASSIGN/* = */, OP_GT/* > */, OP_LT/* < */, OP_EXCL/* ! */, OP_Q/* ? */, 
-		OP_COLON/* : */, OP_EQ/* == */, OP_NEQ/* != */, OP_GE/* >= */, OP_LE/* <= */, OP_AND/* & */, 
-		OP_OR/* | */, OP_PLUS/* + */, OP_MINUS/* - */, OP_TIMES/* * */, OP_DIV/* / */, OP_MOD/* % */, 
-		OP_POWER/* ** */, OP_AT/* @ */, OP_RARROW/*
-																																																																																																																																																																																																							 * -
-																																																																																																																																																																																																							 * >
-																																																																																																																																																																																																							 */, OP_LARROW/*
-																																																																																																																																																																																																										 * <
-																																																																																																																																																																																																										 * -
-																																																																																																																																																																																																										 */, LPAREN/* ( */, RPAREN/* ) */, LSQUARE/* [ */, RSQUARE/* ] */, SEMI/* ; */, COMMA/* , */, EOF;
+		IDENTIFIER, INTEGER_LITERAL, BOOLEAN_LITERAL, STRING_LITERAL, KW_x/* x */, KW_X/* X */, KW_y/* y */, KW_Y/* Y */, 
+		KW_r/* r */, KW_R/* R */, KW_a/* a */, KW_A/* A */, KW_Z/* Z */, KW_DEF_X/* DEF_X */, KW_DEF_Y/* DEF_Y */, KW_SCREEN/* SCREEN */, 
+		KW_cart_x/* cart_x */, KW_cart_y/* cart_y */, KW_polar_a/* polar_a */, KW_polar_r/* polar_r */, KW_abs/* abs */,
+		KW_sin/* sin */, KW_cos/* cos */, KW_atan/* atan */, KW_log/* log */, KW_image/* image */, KW_int/* int */, KW_boolean/* boolean */, 
+		KW_url/* url */, KW_file/* file */, OP_ASSIGN/* = */, OP_GT/* > */, OP_LT/* < */, OP_EXCL/* ! */, OP_Q/* ? */, OP_COLON/* : */, 
+		OP_EQ/* == */, OP_NEQ/* != */, OP_GE/* >= */, OP_LE/* <= */, OP_AND/* & */, OP_OR/* | */, OP_PLUS/* + */, OP_MINUS/* - */,
+		OP_TIMES/* * */, OP_DIV/* / */, OP_MOD/* % */, OP_POWER/* ** */, OP_AT/* @ */, OP_RARROW/** -* > */, OP_LARROW/** <* -*/, 
+		LPAREN/* ( */, RPAREN/* ) */, LSQUARE/* [ */, RSQUARE/* ] */, SEMI/* ; */, COMMA/* , */, EOF;
 	}
 
 	public static enum State {
-		START, IN_DIGIT, IN_IDENT, AFTER_FWD_SLASH, AFTER_EQUALS, AFTER_LESS_THAN, AFTER_GRATER_THAN, 
-		AFTER_EXCLAIMATION, AFTER_MINUS, AFTER_MUL, INSIDE_STRING_LITERAL, AFTER_SLASH_R, INSIDE_COMMENT, INSIDE_ESCAPE_SEQUENCE
+		START, IN_DIGIT, IN_IDENT, AFTER_FWD_SLASH, AFTER_EQUALS, AFTER_LESS_THAN, AFTER_GRATER_THAN, AFTER_EXCLAIMATION, 
+		AFTER_MINUS, AFTER_MUL, INSIDE_STRING_LITERAL, AFTER_SLASH_R, INSIDE_COMMENT, INSIDE_ESCAPE_SEQUENCE
 	}
 
 	/**
@@ -86,6 +81,17 @@ public class Scanner {
 			this.length = length;
 			this.line = line;
 			this.pos_in_line = pos_in_line;
+		}
+
+		/**
+		 * To check if the given token is of the kind passed in the arguments
+		 * 
+		 * @param Kind
+		 *            kind
+		 * @return boolean true if token is of the kind passed as the arguments
+		 */
+		public boolean isKind(Kind kind) {
+			return (this.kind == kind);
 		}
 
 		public String getText() {
@@ -502,7 +508,7 @@ public class Scanner {
 									posInLine));
 							pos++;
 							posInLine++;
-						} else{
+						} else {
 							state = State.IN_DIGIT;
 							identifierSB.delete(0, identifierSB.length());
 						}
@@ -532,14 +538,17 @@ public class Scanner {
 					posInLine++;
 				} else {
 					state = State.START;
-					try{
+					try {
 						int x = Integer.parseInt(identifierSB.toString());
-						assert Integer.MIN_VALUE<=x;
-						assert x<=Integer.MAX_VALUE;
-					tokens.add(new Token(Kind.INTEGER_LITERAL, startPos, pos
-							- startPos, line, posInLine - (pos - startPos)));
-					} catch(Exception e){throw new LexicalException(
-							"Integer out of bounds at line:" + line, pos);}
+						assert Integer.MIN_VALUE <= x;
+						assert x <= Integer.MAX_VALUE;
+						tokens.add(new Token(Kind.INTEGER_LITERAL, startPos,
+								pos - startPos, line, posInLine
+										- (pos - startPos)));
+					} catch (Exception e) {
+						throw new LexicalException(
+								"Integer out of bounds at line:" + line, pos);
+					}
 				}
 			}
 				break;
@@ -665,12 +674,12 @@ public class Scanner {
 				break;
 
 			case INSIDE_COMMENT: {
-				if((ch==EOFchar)&&(chars.length==(pos+1))){
+				if ((ch == EOFchar) && (chars.length == (pos + 1))) {
 					tokens.add(new Token(Kind.EOF, pos, 0, line, posInLine));
 					pos++;
 					posInLine++;
 				}
-				
+
 				if (ch == '\n') {
 					posInLine = 1;
 					line++;

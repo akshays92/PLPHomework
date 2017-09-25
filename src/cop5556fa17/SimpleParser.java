@@ -19,6 +19,22 @@ import static cop5556fa17.Scanner.Kind.*;
  * This Class Simple parser checks the input program for legality of inputs syntactically with the below defined LL1 grammar. 
  * Legal LL1 grammar for this top down parser comprises of
  * 
+ * Program ::=  IDENTIFIER   ( Declaration SEMI | Statement SEMI )*   
+ * Declaration :: =  VariableDeclaration     |    ImageDeclaration   |   SourceSinkDeclaration  
+ * VariableDeclaration  ::=  VarType IDENTIFIER  (  OP_ASSIGN  Expression  | ε )
+ * VarType ::= KW_int | KW_boolean
+ * SourceSinkDeclaration ::= SourceSinkType IDENTIFIER  OP_ASSIGN  Source
+ * SourceSinkType := KW_url | KW_file
+ * ImageDeclaration::=KW_image  (LSQUARE Expression COMMA Expression RSQUARE | ε) IDENTIFIER ( OP_LARROW Source | ε )
+ * Statement ::= IDENTIFIER (ImageOutStatementTaill | ImageInStatementTaill | AssignmentStatementTail)
+ * ImageOutStatement ::= IDENTIFIER ImageOutStatementTaill
+ * ImageOutStatementTaill ::= OP_RARROW Sink
+ * Sink ::= IDENTIFIER | KW_SCREEN
+ * ImageInStatement ::= IDENTIFIER ImageInStatementTaill
+ * ImageInStatementTaill ::= OP_LARROW Source
+ * Source ::= STRING_LITERAL | OP_AT Expression | IDENTIFIER
+ * AssignmentStatement ::= IDENTIFIER AssignmentStatementTail
+ * AssignmentStatementTail ::= lhstail OP_ASSIGN Expression // 
  * Expression ::= OrExpression ( OP_Q Expression OP_COLON EXPRESSION|ε)
  * OrExpression ::= AndExpression   (  OP_OR  AndExpression)*
  * AndExpression ::= EqExpression ( OP_AND  EqExpression )*
@@ -30,7 +46,8 @@ import static cop5556fa17.Scanner.Kind.*;
  * UnaryExpressionNotPlusMinus ::=  OP_EXCL  UnaryExpression  | Primary | IdentOrPixelSelectorExpression | KW_x | KW_y | KW_r | KW_a | KW_X | KW_Y | KW_Z | KW_A | KW_R | KW_DEF_X | KW_DEF_Y
  * Primary ::= INTEGER_LITERAL | LPAREN Expression RPAREN | FunctionApplication
  * IdentOrPixelSelectorExpression::=  IDENTIFIER (LSQUARE Selector RSQUARE   | ε)
- * Lhs::=  IDENTIFIER ( LSQUARE LhsSelector RSQUARE   | ε )
+ * Lhs::=  IDENTIFIER lhstail
+ * lhstail ::= (LSQUARE LhsSelector RSQUARE )  | ε //for eg [x,y]
  * FunctionApplication ::= FunctionName (LPAREN Expression RPAREN | LSQUARE Selector RSQUARE)
  * FunctionName ::= KW_sin | KW_cos | KW_atan | KW_abs | KW_cart_x | KW_cart_y | KW_polar_a | KW_polar_r
  * LhsSelector ::= LSQUARE  ( XySelector  | RaSelector  )   RSQUARE
@@ -136,7 +153,6 @@ public class SimpleParser {
 		matchEOF();
 	}
 	
-
 	
 	/**
 	 * Program ::=  IDENTIFIER   ( Declaration SEMI | Statement SEMI )*   
@@ -146,12 +162,261 @@ public class SimpleParser {
 	 * @throws SyntaxException
 	 */
 	void program() throws SyntaxException {
-		//TODO  implement this
-		throw new UnsupportedOperationException();
+		match(IDENTIFIER);
+		while (((t.isKind(KW_int)||t.isKind(KW_boolean))||(t.isKind(KW_url)||t.isKind(KW_file))||(t.isKind(KW_image)))||(t.isKind(IDENTIFIER))){
+		if((t.isKind(KW_int)||t.isKind(KW_boolean))||(t.isKind(KW_url)||t.isKind(KW_file))||(t.isKind(KW_image))) {
+			declaration();
+			match(SEMI);
+		}
+		else if (t.isKind(IDENTIFIER)) {
+			statement();
+			match(SEMI);
+		}
+	}
+		
+		
 	}
 	
 	
+	/**
+	 * Declaration :: =  VariableDeclaration     |    ImageDeclaration   |   SourceSinkDeclaration  
+	 * @throws SyntaxException
+	 */
+	void declaration() throws SyntaxException {
+			
+		if (t.isKind(KW_int)||t.isKind(KW_boolean)) variableDeclaration();
+		else if (t.isKind(KW_image)) imageDeclaration();
+		else if(t.isKind(KW_url)||t.isKind(KW_file)) sourceSinkDeclaration();
+		else {
+			StringBuffer sb = new StringBuffer();
+			sb.append("Syntax Exception: (Expected ");
+			sb.append(KW_int.toString()+", ");
+			sb.append(KW_boolean.toString()+", ");
+			sb.append(KW_url.toString()+", ");
+			sb.append(KW_file.toString()+", ");
+			sb.append(KW_image.toString());
+		    //sb.append("Assignment Statement");
+			throw new SyntaxException(t, sb.toString()+")");
+		}
+		
+	}
+	
+	/**
+	 * VariableDeclaration  ::=  VarType IDENTIFIER  (  OP_ASSIGN  Expression  | ε )
+	 * @throws SyntaxException
+	 */
+	void variableDeclaration() throws SyntaxException {
+			varType();
+			match(IDENTIFIER);
+			if(t.isKind(OP_ASSIGN)){
+				match(OP_ASSIGN);
+				expression();
+			}
+			else{}
+	}
+	
+	/**
+	 * VarType ::= KW_int | KW_boolean
+	 * @throws SyntaxException
+	 */
+	void varType() throws SyntaxException {
+			
+		if (t.isKind(KW_int)||t.isKind(KW_boolean)) consume();
+		  //In case stuff goes wrong
+		else {
+			StringBuffer sb = new StringBuffer();
+			sb.append("Syntax Exception: (Expected ");
+			sb.append(KW_int.toString()+", ");
+			sb.append(KW_boolean.toString());
+		    //sb.append("Assignment Statement");
+			throw new SyntaxException(t, sb.toString()+")");
+		}
+		
+	}
+	
+	
+	/**
+	 * SourceSinkDeclaration ::= SourceSinkType IDENTIFIER  OP_ASSIGN  Source
+	 * @throws SyntaxException
+	 */
+	void sourceSinkDeclaration() throws SyntaxException {
+			sourceSinkType();
+			match(IDENTIFIER);
+			match(OP_ASSIGN);
+			source();
+	}
+	
+	/**
+	 * SourceSinkType := KW_url | KW_file
+	 * @throws SyntaxException
+	 */
+	void sourceSinkType() throws SyntaxException {
+			
+		if (t.isKind(KW_url)||t.isKind(KW_file)) consume();
+		  //In case stuff goes wrong
+		else {
+			StringBuffer sb = new StringBuffer();
+			sb.append("Syntax Exception: (Expected ");
+			sb.append(KW_url.toString()+", ");
+			sb.append(KW_file.toString());
+		    //sb.append("Assignment Statement");
+			throw new SyntaxException(t, sb.toString()+")");
+		}
+		
+	}
+	
+	
+	/**
+	 * ImageDeclaration::=KW_image  (LSQUARE Expression COMMA Expression RSQUARE | ε) IDENTIFIER ( OP_LARROW Source | ε )   
+	 * @throws SyntaxException
+	 */
+	void imageDeclaration() throws SyntaxException {
+		match(KW_image);
+		if (t.isKind(LSQUARE)){
+			match(LSQUARE);
+			expression();
+			match(COMMA);
+			expression();
+			match(RSQUARE);
+		}
+		else {}
+		match(IDENTIFIER);
+		if (t.isKind(OP_LARROW)){
+			match(OP_LARROW);
+			source();
+		}
+		else {}
+		/**
+		 * 
+		 * In case stuff goes wrong
+		 	else {
+			StringBuffer sb = new StringBuffer();
+			sb.append("Syntax Exception: (Expected ");
+			sb.append(OP_LARROW.toString()+", ");
+			sb.append(OP_RARROW.toString()+", ");
+		    sb.append("Assignment Statement");
+			throw new SyntaxException(t, sb.toString()+")");
+		}
+		*/
+	}
+	
+	
+	/**
+	 * Statement ::= IDENTIFIER (ImageOutStatementTaill|ImagementInStatementTail|assignmentStatementTail)
+	 * @throws SyntaxException
+	 */
+	void statement() throws SyntaxException {
+		match(IDENTIFIER);
+		if(t.isKind(OP_RARROW)) imageOutStatementTaill();
+		else if (t.isKind(OP_LARROW)) imageInStatementTaill();
+		else if (t.isKind(LSQUARE)||t.isKind(OP_ASSIGN)) assignmentStatementTail();
+		else {
+			StringBuffer sb = new StringBuffer();
+			sb.append("Syntax Exception: (Expected ");
+			sb.append(OP_LARROW.toString()+", ");
+			sb.append(OP_RARROW.toString()+", ");
+		    sb.append("Assignment Statement");
+			throw new SyntaxException(t, sb.toString()+")");
+		}
+	}
+	
+	
+	
+	/**
+	 * ImageOutStatement ::= IDENTIFIER ImageOutStatementTaill
+	 * @throws SyntaxException
+	 */
+	void imageOutStatement() throws SyntaxException {
+		match(IDENTIFIER);
+		imageOutStatementTaill();
+	}
+	
+	/**
+	 * ImageOutStatementTaill ::= OP_RARROW Sink
+	 * @throws SyntaxException
+	 */
+	void imageOutStatementTaill() throws SyntaxException {
+		match(OP_RARROW);
+		sink();
+	}
+	
+	/**
+	 * Sink ::= IDENTIFIER | KW_SCREEN
+	 * @throws SyntaxException
+	 */
+	void sink() throws SyntaxException {
+		if(t.isKind(IDENTIFIER)){
+			match(IDENTIFIER);
+			}
+		else if (t.isKind(KW_SCREEN)){
+			match(KW_SCREEN);
+		}			
+		else {
+			StringBuffer sb = new StringBuffer();
+			sb.append("Syntax Exception: (Expected ");
+			sb.append(KW_SCREEN.toString()+", ");
+		    sb.append(IDENTIFIER.toString()+", ");
+			throw new SyntaxException(t, sb.toString()+")");
+		}
+	}
+	
+	/**
+	 * ImageInStatement ::= IDENTIFIER ImageInStatementTaill
+	 * @throws SyntaxException
+	 */
+	void imageInStatement() throws SyntaxException {
+		match(IDENTIFIER);
+		imageInStatementTaill();
+	}
+	
+	/**
+	 * ImageInStatementTaill ::= OP_LARROW Source
+	 * @throws SyntaxException
+	 */
+	void imageInStatementTaill() throws SyntaxException {
+		match(OP_LARROW);
+		source();
+	}
+	
+	
+	/**
+	 * Source ::= STRING_LITERAL | OP_AT Expression | IDENTIFIER
+	 * @throws SyntaxException
+	 */
+	void source() throws SyntaxException {
+		if(t.isKind(STRING_LITERAL)||t.isKind(IDENTIFIER)) consume();
+		else if (t.isKind(OP_AT)){
+			match(OP_AT);
+			expression();
+		}
+		else {
+			StringBuffer sb = new StringBuffer();
+			sb.append("Syntax Exception: (Expected a STRING_LITERAL, @ or IDENTIFIER) ");
+			throw new SyntaxException(t, sb.toString()+")");
+		}
+	}
+	
+	/**
+	 * AssignmentStatement ::= IDENTIFIER AssignmentStatementTail
+	 * @throws SyntaxException
+	 */
+	void assignmentStatement() throws SyntaxException {
+		match(IDENTIFIER);
+		assignmentStatementTail();
+	}
+	
+	/**
+	 * AssignmentStatementTail ::= lhstail OP_ASSIGN Expression
+	 * @throws SyntaxException
+	 */
+	void assignmentStatementTail() throws SyntaxException {
+		lhstail();
+		match(OP_ASSIGN);
+		expression();
+	}
 
+	
+	
 	/**
 	 * Expression ::= OrExpression ( OP_Q Expression OP_COLON EXPRESSION|ε)
 	 * 
@@ -366,19 +631,27 @@ public class SimpleParser {
 	}
 	
 	/**
-	 * Lhs::=  IDENTIFIER ( LSQUARE LhsSelector RSQUARE   | ε )
+	 * Lhs::=  IDENTIFIER lhstail
 	 * @throws SyntaxException
 	 */
 	void lhs()throws SyntaxException{
 		match(IDENTIFIER);
-		if(t.isKind(LSQUARE)){
-		match(LSQUARE);
-		lhsSelector();
-		match(RSQUARE);}
-		else{
-		//TODO write else code to match follow set and give appropriate error message
-		}
+		lhstail();
 		
+	}
+	
+	/**
+	 * lhstail ::=( LSQUARE LhsSelector RSQUARE   | ε )
+	 * @throws SyntaxException
+	 */
+	void lhstail() throws SyntaxException{
+		if(t.isKind(LSQUARE)){
+			match(LSQUARE);
+			lhsSelector();
+			match(RSQUARE);}
+			else{
+			//TODO write else code to match follow set and give appropriate error message
+			}
 	}
 	
 	/**
@@ -415,16 +688,16 @@ public class SimpleParser {
 	 * @throws SyntaxException
 	 */
 	void functionName() throws SyntaxException{
-		if(!FunctionNameHS.contains(t.kind)){
-			StringBuffer sb = new StringBuffer();
-			sb.append("Syntax Exception: (Expected a token of type/s :");
-			Iterator<Kind> it = FunctionNameHS.iterator();
-		     while(it.hasNext()){
-		        sb.append(it.next().toString()+", ");
-		     }
-			throw new SyntaxException(t, sb.toString()+")");
+		if(FunctionNameHS.contains(t.kind)){
+			consume();
 		}
-		else {consume();}
+		else {StringBuffer sb = new StringBuffer();
+		sb.append("Syntax Exception: (Expected a token of type/s :");
+		Iterator<Kind> it = FunctionNameHS.iterator();
+	     while(it.hasNext()){
+	        sb.append(it.next().toString()+", ");
+	     }
+		throw new SyntaxException(t, sb.toString()+")");}
 		
 	}
 	

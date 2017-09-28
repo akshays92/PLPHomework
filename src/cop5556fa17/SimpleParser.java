@@ -44,7 +44,7 @@ import static cop5556fa17.Scanner.Kind.*;
  * MultExpression := UnaryExpression ( ( OP_TIMES | OP_DIV  | OP_MOD ) UnaryExpression )*
  * UnaryExpression ::= OP_PLUS UnaryExpression | OP_MINUS UnaryExpression | UnaryExpressionNotPlusMinus
  * UnaryExpressionNotPlusMinus ::=  OP_EXCL  UnaryExpression  | Primary | IdentOrPixelSelectorExpression | KW_x | KW_y | KW_r | KW_a | KW_X | KW_Y | KW_Z | KW_A | KW_R | KW_DEF_X | KW_DEF_Y
- * Primary ::= INTEGER_LITERAL | LPAREN Expression RPAREN | FunctionApplication
+ * Primary ::= INTEGER_LITERAL | LPAREN Expression RPAREN | FunctionApplication | BOOLEAN_LITERAL
  * IdentOrPixelSelectorExpression::=  IDENTIFIER (LSQUARE Selector RSQUARE   | ε)
  * Lhs::=  IDENTIFIER lhstail
  * lhstail ::= (LSQUARE LhsSelector RSQUARE )  | ε //for eg [x,y]
@@ -68,7 +68,7 @@ public class SimpleParser {
 
 		public SyntaxException(Token t, String message) {
 			// and found token "+t.getText());
-			super(message+" and found token \""+t.getText()+"\" (type: "+t.kind.toString()+") at line "+t.line);
+			super(message+" and found token \""+t.getText()+"\" (type: "+t.kind.toString()+") at line "+t.line+"  "+t.pos_in_line);
 			this.t = t;
 		}
 
@@ -583,13 +583,16 @@ public class SimpleParser {
 	}
 	
 	/**
-	 * Primary ::= INTEGER_LITERAL | LPAREN Expression RPAREN | FunctionApplication
+	 * Primary ::= INTEGER_LITERAL | LPAREN Expression RPAREN | FunctionApplication | Boolean_literal
 	 * @throws SyntaxException
 	 */
 	void primary() throws SyntaxException{
 		if(t.isKind(INTEGER_LITERAL)){
 			match(INTEGER_LITERAL);
 		}
+		else if(t.isKind(BOOLEAN_LITERAL)){
+			match(BOOLEAN_LITERAL);
+		}		
 		else if (t.isKind(LPAREN)){
 			match(LPAREN);
 			expression();

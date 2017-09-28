@@ -621,7 +621,7 @@ public class SimpleParserTest {
 	 */
 	@Test
 	public void primaryTest1() throws SyntaxException, LexicalException {
-		String[] input = {"123"/*integer literal*/, "(ij)" /* dummy expression */, "cos(2)", "atan(x)" /*Function Applications*/ }; 
+		String[] input = {"123"/*integer literal*/, "(ij)" /* dummy expression */, "cos(2)", "atan(x)" /*Function Applications*/, "true", "false" }; 
 		for(String x : input){
 			show(x);
 			Scanner scanner = new Scanner(x).scan(); 

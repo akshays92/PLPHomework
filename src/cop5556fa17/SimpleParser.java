@@ -527,7 +527,7 @@ public class SimpleParser {
 			unaryExpression();
 		}
 		//check for unaryExpressionNotPlusMinus
-		else if((UnaryExpressionNotPlusMinusHS.contains(t.kind))||( (t.isKind(INTEGER_LITERAL))||(t.isKind(LPAREN))||(FunctionNameHS.contains(t.kind)) )||
+		else if((UnaryExpressionNotPlusMinusHS.contains(t.kind))||( (t.isKind(INTEGER_LITERAL))||(t.isKind(LPAREN))||(FunctionNameHS.contains(t.kind)) )||t.isKind(BOOLEAN_LITERAL) ||
 				 (t.isKind(IDENTIFIER))||(t.isKind(OP_EXCL))){
 			unaryExpressionNotPlusMinus();
 		}
@@ -558,7 +558,7 @@ public class SimpleParser {
 			consume();
 		}
 		//check for primary
-		else if ( (t.isKind(INTEGER_LITERAL))||(t.isKind(LPAREN))||(FunctionNameHS.contains(t.kind)) ){
+		else if ( (t.isKind(INTEGER_LITERAL))||(t.isKind(LPAREN))||(FunctionNameHS.contains(t.kind)||t.isKind(BOOLEAN_LITERAL)) ){
 			primary();
 		}
 		//check for IdentOrPixelSelectorExpression

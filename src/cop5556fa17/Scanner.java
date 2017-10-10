@@ -169,6 +169,16 @@ public class Scanner {
 			assert kind == Kind.INTEGER_LITERAL;
 			return Integer.valueOf(String.copyValueOf(chars, pos, length));
 		}
+		
+		/**
+		 * precondition: This Token is an Boolalean_liter
+		 * 
+		 * @returns the integer value represented by the token
+		 */
+		public boolean boolVal() {
+			assert kind == Kind.BOOLEAN_LITERAL;
+			return (this.getText().toLowerCase().equals("true"))?true:false;
+		}
 
 		public String toString() {
 			return "[" + kind + "," + String.copyValueOf(chars, pos, length)

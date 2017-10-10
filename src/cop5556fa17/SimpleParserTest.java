@@ -420,6 +420,27 @@ public class SimpleParserTest {
 		}} catch(SyntaxException e){System.out.println(e.getMessage());throw e;}	
 	}
 	
+	@Test
+	/**
+	 * PLEASE DELETE THIS TEST CASE AFTER TESTING YOUR PROGRAM
+	 * @throws SyntaxException
+	 * @throws LexicalException
+	 * @author AkshaySharma
+	 */
+	public void test_complex_expression2() throws SyntaxException, LexicalException {
+		String k = "polar_r((5)|true)";	
+		String[] input = {k}; 
+		try{
+		for(String x : input){
+			show(x);
+			Scanner scanner = new Scanner(x).scan(); 
+			show(scanner); 
+			SimpleParser parser = new SimpleParser(scanner);  
+			parser.expression();  //Call expression directly.  
+		}} catch(SyntaxException e){System.out.println(e.getMessage());throw e;}	
+	}
+	
+	
 	
 	
 	/**

@@ -84,7 +84,7 @@ public class ParserTest {
 	}
 	@Test
 	public void testDec2() throws LexicalException, SyntaxException {
-		String input = "prog\nint akshay=5;\n";
+		String input = "prog\nint akshay=5;\nboolean k=false;";
 		show(input);
 		Scanner scanner = new Scanner(input).scan(); 
 		show(scanner); 
@@ -99,6 +99,13 @@ public class ParserTest {
 		assertEquals("akshay", dec0.name);
 		Expression_IntLit intLit = (Expression_IntLit) dec0.e;
 		assertEquals(5, intLit.value);
+		//line 3
+		Declaration_Variable dec1 = (Declaration_Variable) ast.decsAndStatements
+				.get(1);  
+		assertEquals(KW_boolean, dec1.type.kind);
+		assertEquals("k", dec1.name);
+		Expression_BooleanLit boolLit = (Expression_BooleanLit) dec1.e;
+		assertEquals(false, boolLit.value);
 	}
 	
 

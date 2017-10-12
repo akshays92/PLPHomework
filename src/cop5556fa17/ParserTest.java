@@ -82,6 +82,25 @@ public class ParserTest {
 		assertEquals("k", dec.name);
 		assertNull(dec.e);
 	}
+	@Test
+	public void testDec2() throws LexicalException, SyntaxException {
+		String input = "prog\nint akshay=5;\n";
+		show(input);
+		Scanner scanner = new Scanner(input).scan(); 
+		show(scanner); 
+		Parser parser = new Parser(scanner);
+		Program ast = parser.parse();
+		show(ast);
+		assertEquals(ast.name, "prog"); 
+		//This should have one Declaration_Variable object, which is at position 0 in the decsAndStatements list
+		Declaration_Variable dec0 = (Declaration_Variable) ast.decsAndStatements
+				.get(0);  
+		assertEquals(KW_int, dec0.type.kind);
+		assertEquals("akshay", dec0.name);
+		Expression_IntLit intLit = (Expression_IntLit) dec0.e;
+		assertEquals(5, intLit.value);
+	}
+	
 
 
 }

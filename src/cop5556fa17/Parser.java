@@ -145,9 +145,10 @@ public class Parser {
 	 * 
 	 * @throws SyntaxException
 	 */
-	public void parse() throws SyntaxException {
-		program();
+	public Program parse() throws SyntaxException {
+		Program program = program();
 		matchEOF();
+		return program;
 	}
 	
 	
@@ -160,19 +161,20 @@ public class Parser {
 	 */
 	Program program() throws SyntaxException {
 		ArrayList<ASTNode> decsAndStatements = new ArrayList<ASTNode>();
-		Program p = new Program(t, t,decsAndStatements);
+		Token firstToken = t;
+		
 		match(IDENTIFIER);
 		while (((t.isKind(KW_int)||t.isKind(KW_boolean))||(t.isKind(KW_url)||t.isKind(KW_file))||(t.isKind(KW_image)))||(t.isKind(IDENTIFIER))){
 		if((t.isKind(KW_int)||t.isKind(KW_boolean))||(t.isKind(KW_url)||t.isKind(KW_file))||(t.isKind(KW_image))) {
-			declaration();
+			decsAndStatements.add(declaration());
 			match(SEMI);
 		}
 		else if (t.isKind(IDENTIFIER)) {
-			statement();
+			decsAndStatements.add(statement());
 			match(SEMI);
 		}
 	}
-		return p;
+		return new Program(firstToken, firstToken,decsAndStatements);
 		
 	}
 	
@@ -181,11 +183,11 @@ public class Parser {
 	 * Declaration :: =  VariableDeclaration     |    ImageDeclaration   |   SourceSinkDeclaration  
 	 * @throws SyntaxException
 	 */
-	void declaration() throws SyntaxException {
-			
-		if (t.isKind(KW_int)||t.isKind(KW_boolean)) variableDeclaration();
-		else if (t.isKind(KW_image)) imageDeclaration();
-		else if(t.isKind(KW_url)||t.isKind(KW_file)) sourceSinkDeclaration();
+	Declaration declaration() throws SyntaxException {
+		Declaration declaration = null;
+		if (t.isKind(KW_int)||t.isKind(KW_boolean)) declaration =  variableDeclaration();
+		else if (t.isKind(KW_image)) declaration = imageDeclaration();
+		else if(t.isKind(KW_url)||t.isKind(KW_file)) declaration = sourceSinkDeclaration();
 		else {
 			StringBuffer sb = new StringBuffer();
 			sb.append("Syntax Exception: (Expected ");
@@ -197,30 +199,39 @@ public class Parser {
 		    //sb.append("Assignment Statement");
 			throw new SyntaxException(t, sb.toString()+")");
 		}
-		
+		return declaration;
 	}
 	
 	/**
 	 * VariableDeclaration  ::=  VarType IDENTIFIER  (  OP_ASSIGN  Expression  | ε )
 	 * @throws SyntaxException
 	 */
-	void variableDeclaration() throws SyntaxException {
-			varType();
+	Declaration_Variable variableDeclaration() throws SyntaxException {
+		Declaration_Variable variableDeclaration = null;
+			Token firstToken = t;
+			Token type = varType();
+			Token name = t;
+			Expression e = null;
 			match(IDENTIFIER);
 			if(t.isKind(OP_ASSIGN)){
 				match(OP_ASSIGN);
-				expression();
+				e = expression();
 			}
 			else{}
+			variableDeclaration = new Declaration_Variable(firstToken, type, name,e );
+			return variableDeclaration;
 	}
 	
 	/**
 	 * VarType ::= KW_int | KW_boolean
 	 * @throws SyntaxException
 	 */
-	void varType() throws SyntaxException {
-			
-		if (t.isKind(KW_int)||t.isKind(KW_boolean)) consume();
+	Token varType() throws SyntaxException {
+			Token ft = null;
+		if (t.isKind(KW_int)||t.isKind(KW_boolean)) {
+			ft = t;
+			consume();
+		}
 		  //In case stuff goes wrong
 		else {
 			StringBuffer sb = new StringBuffer();
@@ -230,6 +241,7 @@ public class Parser {
 		    //sb.append("Assignment Statement");
 			throw new SyntaxException(t, sb.toString()+")");
 		}
+		return ft;
 		
 	}
 	
@@ -238,11 +250,18 @@ public class Parser {
 	 * SourceSinkDeclaration ::= SourceSinkType IDENTIFIER  OP_ASSIGN  Source
 	 * @throws SyntaxException
 	 */
-	void sourceSinkDeclaration() throws SyntaxException {
+	Declaration_SourceSink sourceSinkDeclaration() throws SyntaxException {
+		Declaration_SourceSink sourceSinkDeclaration = null;
+		Token firstToken = t;
+		Source source = null;
+		Token name = null;
 			sourceSinkType();
+			name = t;
 			match(IDENTIFIER);
 			match(OP_ASSIGN);
-			source();
+			source = source();
+			sourceSinkDeclaration = new Declaration_SourceSink(firstToken, firstToken, name, source);
+			return sourceSinkDeclaration;
 	}
 	
 	/**
@@ -269,20 +288,27 @@ public class Parser {
 	 * ImageDeclaration::=KW_image  (LSQUARE Expression COMMA Expression RSQUARE | ε) IDENTIFIER ( OP_LARROW Source | ε )   
 	 * @throws SyntaxException
 	 */
-	void imageDeclaration() throws SyntaxException {
+	Declaration_Image imageDeclaration() throws SyntaxException {
+		Declaration_Image imageDeclaration = null;
+		Token firstToken = t;
+		Expression xSize=null;
+		Expression ySize = null;
+		Token name = null;
+		Source source = null;
 		match(KW_image);
 		if (t.isKind(LSQUARE)){
 			match(LSQUARE);
-			expression();
+			xSize=expression();
 			match(COMMA);
-			expression();
+			ySize=expression();
 			match(RSQUARE);
 		}
 		else {}
+		name = t;
 		match(IDENTIFIER);
 		if (t.isKind(OP_LARROW)){
 			match(OP_LARROW);
-			source();
+			source = source();
 		}
 		else {}
 		/**
@@ -297,6 +323,8 @@ public class Parser {
 			throw new SyntaxException(t, sb.toString()+")");
 		}
 		*/
+		imageDeclaration = new Declaration_Image(firstToken, xSize, ySize, name, source);
+		return imageDeclaration;
 	}
 	
 	
@@ -304,11 +332,13 @@ public class Parser {
 	 * Statement ::= IDENTIFIER (ImageOutStatementTaill|ImagementInStatementTail|assignmentStatementTail)
 	 * @throws SyntaxException
 	 */
-	void statement() throws SyntaxException {
+	Statement statement() throws SyntaxException {
+		Statement statement = null;
+		Token firstToken = t;
 		match(IDENTIFIER);
-		if(t.isKind(OP_RARROW)) imageOutStatementTaill();
-		else if (t.isKind(OP_LARROW)) imageInStatementTaill();
-		else if (t.isKind(LSQUARE)||t.isKind(OP_ASSIGN)) assignmentStatementTail();
+		if(t.isKind(OP_RARROW)) statement =  new Statement_Out(firstToken,firstToken, imageOutStatementTaill());//imageOutStatementTaill();
+		else if (t.isKind(OP_LARROW)) statement = new Statement_In(firstToken,firstToken, imageInStatementTaill()); //imageInStatementTaill();
+		else if (t.isKind(LSQUARE)||t.isKind(OP_ASSIGN)) statement = assignmentStatementTail(firstToken);
 		else {
 			StringBuffer sb = new StringBuffer();
 			sb.append("Syntax Exception: (Expected ");
@@ -317,6 +347,7 @@ public class Parser {
 		    sb.append("Assignment Statement");
 			throw new SyntaxException(t, sb.toString()+")");
 		}
+		return statement;
 	}
 	
 	
@@ -399,6 +430,7 @@ public class Parser {
 	 */
 	Source source() throws SyntaxException {
 		Source s = null;
+		Token FirstToken = t;
 		if(t.isKind(STRING_LITERAL)) {
 			s=new Source_StringLiteral(t, t.getText());
 			consume();
@@ -409,7 +441,7 @@ public class Parser {
 		}
 		else if (t.isKind(OP_AT)){
 			match(OP_AT);
-			expression();
+			s = new Source_CommandLineParam(FirstToken,expression());
 		}
 		else {
 			StringBuffer sb = new StringBuffer();
@@ -423,19 +455,21 @@ public class Parser {
 	 * AssignmentStatement ::= IDENTIFIER AssignmentStatementTail
 	 * @throws SyntaxException
 	 */
-	void assignmentStatement() throws SyntaxException {
+	Statement_Assign assignmentStatement() throws SyntaxException {
+		Token firstToksn = t;
 		match(IDENTIFIER);
-		assignmentStatementTail();
+		return assignmentStatementTail(firstToksn);
 	}
 	
 	/**
 	 * AssignmentStatementTail ::= lhstail OP_ASSIGN Expression
 	 * @throws SyntaxException
 	 */
-	void assignmentStatementTail() throws SyntaxException {
-		lhstail();
+	Statement_Assign assignmentStatementTail(Token Identifier) throws SyntaxException {
+		Index i =lhstail();
 		match(OP_ASSIGN);
-		expression();
+		Expression e = expression();
+		return new Statement_Assign(Identifier, new LHS(Identifier, Identifier, i), e);
 	}
 
 	
@@ -448,15 +482,18 @@ public class Parser {
 	 * @throws SyntaxException
 	 */
 	Expression expression() throws SyntaxException {
-		Expression condition,whenTrue,whenFalse;
-		condition = orExpression();
+		Expression result = null;
+		Token firstToken = t;
+		Expression condition = orExpression();
 		if(t.isKind(OP_Q)){
 			match(OP_Q);
-			whenTrue=expression();
+			Expression trueExpression = expression();
 			match(OP_COLON);
-			whenFalse=expression();
+			Expression falseExpression = expression();
+			result = new Expression_Conditional(firstToken, condition, trueExpression, falseExpression);
 		}
-		return null ;
+		else result = condition;
+		return result;
 	}
 	
 	
@@ -465,12 +502,19 @@ public class Parser {
 	 * @throws SyntaxException
 	 */
 	Expression orExpression() throws SyntaxException {
-		andExpression();
-		while (t.isKind(OP_OR)){
-			consume();
-			andExpression();
+		Token firstToken = t;
+		Expression bExpression = andExpression();
+		if (!t.isKind(OP_OR)){
+			return bExpression;
 		}
-		return null;
+		else{		
+		while (t.isKind(OP_OR)){
+			Token op = t;
+			consume();
+			Expression e1 =andExpression();
+			bExpression = new Expression_Binary(firstToken,bExpression , op, e1);
+		}}
+		return bExpression;
 	}
 	
 	
@@ -478,12 +522,20 @@ public class Parser {
 	 * AndExpression ::= EqExpression ( OP_AND  EqExpression )*
 	 * @throws SyntaxException
 	 */
-	void andExpression() throws SyntaxException {
-		eqExpression();
-		while (t.isKind(OP_AND)){
-			consume();
-			eqExpression();
+	Expression andExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression bExpression = eqExpression();
+		if (!t.isKind(OP_AND)){
+			return bExpression;
 		}
+		else{
+		while (t.isKind(OP_AND)){
+			Token op = t;
+			consume();
+			Expression e1 =eqExpression();
+			bExpression = new Expression_Binary(firstToken,bExpression , op, e1);
+		}}
+		return bExpression;
 	}
 	
 	
@@ -491,12 +543,20 @@ public class Parser {
 	 * EqExpression ::= RelExpression  (  (OP_EQ | OP_NEQ )  RelExpression )*
 	 * @throws SyntaxException
 	 */
-	void eqExpression() throws SyntaxException {
-		relExpression();
-		while (t.isKind(OP_EQ)||t.isKind(OP_NEQ)){
-			consume();
-			relExpression();
+	Expression eqExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression bExpression = relExpression();
+		if (!(t.isKind(OP_EQ)||t.isKind(OP_NEQ))){
+			return bExpression;
 		}
+		else{
+		while (t.isKind(OP_EQ)||t.isKind(OP_NEQ)){
+			Token op = t;
+			consume();
+			Expression e1 = relExpression();
+			bExpression = new Expression_Binary(firstToken,bExpression , op, e1);
+		}}
+		return bExpression;
 	}
 	
 	
@@ -504,58 +564,83 @@ public class Parser {
 	 * RelExpression ::= AddExpression (  ( OP_LT  | OP_GT |  OP_LE  | OP_GE )   AddExpression)*
 	 * @throws SyntaxException
 	 */
-	void relExpression() throws SyntaxException {
-		addExpression();
-		while (t.isKind(OP_LT)||t.isKind(OP_LE)||t.isKind(OP_GT)||t.isKind(OP_GE)){
-			consume();
-			addExpression();
+	Expression relExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression bExpression = addExpression();
+		if (!(t.isKind(OP_LT)||t.isKind(OP_LE)||t.isKind(OP_GT)||t.isKind(OP_GE))){
+			return bExpression;
 		}
+		else{
+		while (t.isKind(OP_LT)||t.isKind(OP_LE)||t.isKind(OP_GT)||t.isKind(OP_GE)){
+			Token op = t;
+			consume();
+			Expression e1 = addExpression();
+			bExpression = new Expression_Binary(firstToken,bExpression , op, e1);
+		}}
+		return bExpression;
 	}
 	
 	/**
 	 * AddExpression ::= MultExpression   (  (OP_PLUS | OP_MINUS ) MultExpression )*
 	 * @throws SyntaxException
 	 */
-	void addExpression() throws SyntaxException {
-		multExpression();
-		while (t.isKind(OP_PLUS)||t.isKind(OP_MINUS)){
-			consume();
-			multExpression();
+	Expression addExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression bExpression = multExpression();
+		if (!(t.isKind(OP_PLUS)||t.isKind(OP_MINUS))){
+			return bExpression;
 		}
+		else{
+		while (t.isKind(OP_PLUS)||t.isKind(OP_MINUS)){
+			Token op = t;
+			consume();
+			Expression e1 = multExpression();
+			bExpression = new Expression_Binary(firstToken,bExpression , op, e1);
+		}}
+		return bExpression;
 	}
 	
 	/**
 	 * MultExpression := UnaryExpression ( ( OP_TIMES | OP_DIV  | OP_MOD ) UnaryExpression )*
 	 * @throws SyntaxException
 	 */
-	void multExpression() throws SyntaxException {
-		unaryExpression();
-		while (t.isKind(OP_TIMES)||t.isKind(OP_DIV)||t.isKind(OP_MOD)){
-			consume();
-			unaryExpression();
+	Expression multExpression() throws SyntaxException {
+		Token firstToken = t;
+		Expression bExpression=unaryExpression();
+		if (!(t.isKind(OP_TIMES)||t.isKind(OP_DIV)||t.isKind(OP_MOD))){
+			return bExpression;
 		}
+		else{
+		while (t.isKind(OP_TIMES)||t.isKind(OP_DIV)||t.isKind(OP_MOD)){
+			Token op = t;
+			consume();
+			Expression e1 = unaryExpression();
+			bExpression = new Expression_Binary(firstToken,bExpression , op, e1);
+		}}
+		return bExpression;
 	}
 	
 	/**
 	 * UnaryExpression ::= OP_PLUS UnaryExpression | OP_MINUS UnaryExpression | UnaryExpressionNotPlusMinus
 	 * @throws SyntaxException
 	 */
-	void unaryExpression() throws SyntaxException{
-		
+	Expression unaryExpression() throws SyntaxException{
+		Expression  unaryExpression = null;
+		Token firstToken = t;
 		//check for plus
 		if(t.isKind(OP_PLUS)){
 			match(OP_PLUS);
-			unaryExpression();
+			unaryExpression = new Expression_Unary(firstToken,firstToken,unaryExpression());
 		}
 		//check for minus
 		else if(t.isKind(OP_MINUS)){
 			match(OP_MINUS);
-			unaryExpression();
+			unaryExpression = new Expression_Unary(firstToken,firstToken,unaryExpression());
 		}
 		//check for unaryExpressionNotPlusMinus
 		else if((UnaryExpressionNotPlusMinusHS.contains(t.kind))||( (t.isKind(INTEGER_LITERAL))||(t.isKind(LPAREN))||(FunctionNameHS.contains(t.kind)) )||t.isKind(BOOLEAN_LITERAL) ||
 				 (t.isKind(IDENTIFIER))||(t.isKind(OP_EXCL))){
-			unaryExpressionNotPlusMinus();
+			unaryExpression = unaryExpressionNotPlusMinus();
 		}
 		//else throw error
 		else {
@@ -570,6 +655,8 @@ public class Parser {
 			throw new SyntaxException(t, sb.toString()+")");
 		}
 		
+		return unaryExpression;
+		
 	}
 	
 	
@@ -577,23 +664,26 @@ public class Parser {
 	 * UnaryExpressionNotPlusMinus ::=  OP_EXCL  UnaryExpression  | Primary | IdentOrPixelSelectorExpression | KW_x | KW_y | KW_r | KW_a | KW_X | KW_Y | KW_Z | KW_A | KW_R | KW_DEF_X | KW_DEF_Y
 	 * @throws SyntaxException
 	 */
-	void unaryExpressionNotPlusMinus() throws SyntaxException{
-		
+	Expression unaryExpressionNotPlusMinus() throws SyntaxException{
+		Expression unaryExpressionNotPlusMinus = null;
 		//check for x,y,r,a,X,Y,Z,A,R,DEF_X,DEF_Y
+		Token firstToken = t;
 		if(UnaryExpressionNotPlusMinusHS.contains(t.kind)){
+			unaryExpressionNotPlusMinus = new Expression_PredefinedName(t, t.kind);
 			consume();
 		}
 		//check for primary
 		else if ( (t.isKind(INTEGER_LITERAL))||(t.isKind(LPAREN))||(FunctionNameHS.contains(t.kind)||t.isKind(BOOLEAN_LITERAL)) ){
-			primary();
+			unaryExpressionNotPlusMinus = primary();
 		}
 		//check for IdentOrPixelSelectorExpression
 		else if (t.isKind(IDENTIFIER)){
-			identOrPixelSelectorExpression();
+			unaryExpressionNotPlusMinus = identOrPixelSelectorExpression();
 		}
 		else if (t.isKind(OP_EXCL)){
 			match(OP_EXCL);
-			unaryExpression();
+			unaryExpressionNotPlusMinus = new Expression_Unary(firstToken, firstToken,unaryExpression());
+			
 		}
 		
 		else {
@@ -605,7 +695,7 @@ public class Parser {
 		    sb.append(LPAREN.toString()+", ");
 			throw new SyntaxException(t, sb.toString()+")");
 		}
-		
+		return unaryExpressionNotPlusMinus;
 	}
 	
 	/**
@@ -652,16 +742,19 @@ public class Parser {
 	 * IdentOrPixelSelectorExpression::=  IDENTIFIER (LSQUARE Selector RSQUARE   | ε)
 	 * @throws SyntaxException
 	 */
-	void identOrPixelSelectorExpression() throws SyntaxException{
+	Expression identOrPixelSelectorExpression() throws SyntaxException{
+		Expression identOrPixelSelectorExpression = null;
+		Token firstToken = t;
 		match(IDENTIFIER);
 		if(t.isKind(LSQUARE)){
 			match(LSQUARE);
-			selector();
+			identOrPixelSelectorExpression = new Expression_PixelSelector(firstToken,firstToken,selector());
 			match(RSQUARE);
 		}
 		else{
-			//TODO write else code to match follow set and give appropriate error message
+			identOrPixelSelectorExpression=new Expression_Ident(firstToken, firstToken);
 			}
+		return identOrPixelSelectorExpression;
 		
 	}
 	
@@ -669,24 +762,27 @@ public class Parser {
 	 * Lhs::=  IDENTIFIER lhstail
 	 * @throws SyntaxException
 	 */
-	void lhs()throws SyntaxException{
-		match(IDENTIFIER);
-		lhstail();
-		
+	LHS lhs()throws SyntaxException{
+		LHS lhs = null;
+		Token ft = t;
+		match(IDENTIFIER);	
+		lhs = new LHS(ft,ft,lhstail());
+		//TODO Index in lhstail() can return null Make a testcase to exploit this
+		return lhs;
 	}
 	
 	/**
 	 * lhstail ::=( LSQUARE LhsSelector RSQUARE   | ε )
 	 * @throws SyntaxException
 	 */
-	void lhstail() throws SyntaxException{
+	Index lhstail() throws SyntaxException{
+		Index lhstail=null;
 		if(t.isKind(LSQUARE)){
 			match(LSQUARE);
-			lhsSelector();
-			match(RSQUARE);}
-			else{
-			//TODO write else code to match follow set and give appropriate error message
+			lhstail= lhsSelector();
+			match(RSQUARE);
 			}
+		return lhstail;
 	}
 	
 	/**
@@ -696,16 +792,18 @@ public class Parser {
 	 */
 	
 	Expression functionApplication() throws SyntaxException{
-		functionName();
+		Token firstToken = t;
+		Kind function=functionName();
+		Expression functionApplication = null;
 		switch(t.kind){
 		case LPAREN:
 			match(LPAREN);
-			expression();
+			functionApplication = new Expression_FunctionAppWithExprArg(firstToken,function,expression());
 			match(RPAREN);
 			break;
 		case LSQUARE:
 			match(LSQUARE);
-			selector();
+			functionApplication = new Expression_FunctionAppWithIndexArg(firstToken, function, selector());
 			match(RSQUARE);
 			break;
 			
@@ -715,7 +813,7 @@ public class Parser {
 			" or "+LSQUARE.toString() +
 			")");
 		}
-		return null;
+		return functionApplication;
 		
 	}
 	
@@ -724,7 +822,8 @@ public class Parser {
 	 * FunctionName ::= KW_sin | KW_cos | KW_atan | KW_abs | KW_cart_x | KW_cart_y | KW_polar_a | KW_polar_r
 	 * @throws SyntaxException
 	 */
-	void functionName() throws SyntaxException{
+	Kind functionName() throws SyntaxException{
+		Kind functionName=t.kind;
 		if(FunctionNameHS.contains(t.kind)){
 			consume();
 		}
@@ -735,7 +834,7 @@ public class Parser {
 	        sb.append(it.next().toString()+", ");
 	     }
 		throw new SyntaxException(t, sb.toString()+")");}
-		
+		return functionName;
 	}
 	
 	
@@ -744,14 +843,15 @@ public class Parser {
 	 * @throws SyntaxException
 	 */
 	
-	void lhsSelector() throws SyntaxException{
+	Index lhsSelector() throws SyntaxException{
+		Index lhsSelector = null;
 		match(LSQUARE);
 		switch(t.kind){
 		case KW_x:
-			xySelector();
+			lhsSelector=xySelector();
 			break;
 		case KW_r:
-			raSelector();
+			lhsSelector=raSelector();
 			break;
 		default:
 			throw new SyntaxException(t, "Syntax Exception: (Expected a token of type/s :"+
@@ -759,7 +859,8 @@ public class Parser {
 																" or "+KW_r.toString() +
 																")");
 		}
-		match(RSQUARE);			
+		match(RSQUARE);
+		return lhsSelector;
 	}
 	
 	/**

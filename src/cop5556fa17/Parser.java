@@ -1,13 +1,11 @@
 package cop5556fa17;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import cop5556fa17.Scanner.Kind;
 import cop5556fa17.Scanner.Token;
-import cop5556fa17.SimpleParser.SyntaxException;
 import cop5556fa17.AST.*;
 import static cop5556fa17.Scanner.Kind.*;
 

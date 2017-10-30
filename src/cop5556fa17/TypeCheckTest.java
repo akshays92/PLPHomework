@@ -87,6 +87,25 @@ public class TypeCheckTest {
 		show(ast);
 	}
 
+	/**
+	 * Simple test case with an almost empty program.
+	 * 
+	 * @throws Exception
+	 */
+	@Test
+	public void testIndex() throws Exception {
+		String input = "n"; //Smallest legal program, only has a name
+		show(input); // Display the input
+		Scanner scanner = new Scanner(input).scan(); // Create a Scanner and
+														// initialize it
+		show(scanner); // Display the Scanner
+		Parser parser = new Parser(scanner); // Create a parser
+		ASTNode ast = parser.parse(); // Parse the program
+		TypeCheckVisitor v = new TypeCheckVisitor();
+		String name = (String) ast.visit(v, null);
+		show("AST for program " + name);
+		show(ast);
+	}
 
 
 	

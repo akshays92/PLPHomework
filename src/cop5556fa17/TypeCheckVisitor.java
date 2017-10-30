@@ -1,8 +1,13 @@
 package cop5556fa17;
 
+import javax.lang.model.element.ElementKind;
+
+import cop5556fa17.Scanner.Kind;
 import cop5556fa17.Scanner.Token;
+import cop5556fa17.TypeUtils.Type;
 import cop5556fa17.AST.ASTNode;
 import cop5556fa17.AST.ASTVisitor;
+import cop5556fa17.AST.Declaration;
 import cop5556fa17.AST.Declaration_Image;
 import cop5556fa17.AST.Declaration_SourceSink;
 import cop5556fa17.AST.Declaration_Variable;
@@ -41,7 +46,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			}
 
 		}		
-		
+		 SymbolTable symbolTable = new SymbolTable();
 
 	
 	/**
@@ -76,14 +81,38 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitExpression_Unary(Expression_Unary expression_Unary,
 			Object arg) throws Exception {
+		/*
+		 * Expression_Unary ::= op Expression
+			Expression_Unary.Type <=
+				let t = Expression.Type in 
+                   if op ∈ {EXCL} && (t == BOOLEAN || t == INTEGER) then t
+                   else if op {PLUS, MINUS} && t == INTEGER then INTEGER
+		    	   else Ʇ
+            REQUIRE:  Expression_ Unary.Type ≠ Ʇ 
+		 */
 		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		expression_Unary.e.visit(this, arg);
+		if (expression_Unary.op.equals(Kind.OP_EXCL) && ((expression_Unary.e.getUtilType().equals(Type.BOOLEAN))||(expression_Unary.e.getUtilType().equals(Type.INTEGER))))
+			expression_Unary.setUtilType(expression_Unary.e.getUtilType());
+		else if ((expression_Unary.op.equals(Kind.OP_PLUS)||expression_Unary.op.equals(Kind.OP_PLUS))&&(expression_Unary.e.getUtilType().equals(Type.INTEGER))) 
+			expression_Unary.setUtilType(Type.INTEGER);
+		else expression_Unary.setUtilType(null);
+		if (expression_Unary.getUtilType().equals(null)) throw new UnsupportedOperationException();
+		return arg;
 	}
 
 	@Override
 	public Object visitIndex(Index index, Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/*
+		 * Index ::= Expression0 Expression1
+		 *	REQUIRE: Expression0.Type == INTEGER &&  Expression1.Type == INTEGER
+		 *	Index.isCartesian <= !(Expression0 == KW_r && Expression1 == KW_a)
+		 */
+		index.e0.visit(this, arg);
+		index.e1.visit(this, arg);
+		if (!(index.e0.getUtilType()==Type.INTEGER && index.e1.getUtilType()==Type.INTEGER)) throw new UnsupportedOperationException(); 
+		index.setCartesian(!(index.e0.firstToken.isKind(Kind.KW_r) && index.e1.firstToken.isKind(Kind.KW_a)));
+		return arg;
 	}
 
 	@Override
@@ -113,23 +142,45 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitSource_StringLiteral(
 			Source_StringLiteral source_StringLiteral, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/**
+		 *Source_StringLiteral ::=  fileOrURL
+		 *  Source_StringLIteral.Type <= if isValidURL(fileOrURL) then URL else FILE
+		 */
+		try{
+		new java.net.URL(source_StringLiteral.fileOrUrl);
+		source_StringLiteral.setUtilType(Type.URL);
+		} catch (Exception e){
+			source_StringLiteral.setUtilType(Type.FILE);
+		}
+		return arg;
 	}
 
 	@Override
 	public Object visitSource_CommandLineParam(
 			Source_CommandLineParam source_CommandLineParam, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/*
+		 *Source_CommandLineParam  ::= ExpressionparamNum
+		 * Source_CommandLineParam .Type <= ExpressionparamNum.Type
+		 * REQUIRE:  Source_CommandLineParam .Type == INTEGER
+		 */
+		source_CommandLineParam.paramNum.visit(this, arg);
+		source_CommandLineParam.setUtilType(source_CommandLineParam.paramNum.getUtilType());
+		if (!(source_CommandLineParam.getUtilType()==Type.INTEGER))	throw new UnsupportedOperationException();
+		return arg;
 	}
 
 	@Override
 	public Object visitSource_Ident(Source_Ident source_Ident, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/*
+		 * Source_Ident.Type <= symbolTable.lookupType(name)
+         *  REQUIRE:  Source_Ident.Type == FILE || Source_Ident.Type == URL
+		 */
+		source_Ident.setUtilType(symbolTable.lookupDec(source_Ident.name).getType());
+		Type source_IdentType = source_Ident.getUtilType();
+		if(!(source_IdentType==Type.FILE)||!(source_IdentType==Type.URL)) throw new UnsupportedOperationException();
+		return arg;
 	}
 
 	@Override
@@ -167,8 +218,12 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitExpression_PredefinedName(
 			Expression_PredefinedName expression_PredefinedName, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/*
+		 * Expression_PredefinedName ::=  predefNameKind
+			Expression_PredefinedName.TYPE <= INTEGER
+		 */
+		expression_PredefinedName.setUtilType(Type.INTEGER);
+		return arg;
 	}
 
 	@Override
@@ -194,22 +249,41 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitLHS(LHS lhs, Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/*
+		 * LHS ::= name Index
+		 *  LHS.Declaration <= symbolTable.lookupDec(name)
+         *  LHS.Type <= LHS.Declaration.Type
+         *  LHS.isCarteisan <= Index.isCartesian
+		 */
+		lhs.lhsDeclaration=symbolTable.lookupDec(lhs.name);
+		lhs.setUtilType(lhs.lhsDeclaration.getType());
+		lhs.isCarteisan=lhs.index.isCartesian();
+		return arg;
 	}
 
 	@Override
 	public Object visitSink_SCREEN(Sink_SCREEN sink_SCREEN, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/*
+		 * Sink_SCREEN ::= SCREEN
+		 *  Sink_SCREEN.Type <= SCREEN
+		 */
+		sink_SCREEN.setUtilType(Type.SCREEN);
+		return arg;
 	}
 
 	@Override
-	public Object visitSink_Ident(Sink_Ident sink_Ident, Object arg)
-			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+	public Object visitSink_Ident(Sink_Ident sink_Ident, Object arg) throws Exception {
+		/*
+		 * Sink_Ident ::= name
+		 *  Sink_Ident.Type <= symbolTable.lookupType(name) 
+         *  REQUIRE:  Sink_Ident.Type  == FILE
+		 */
+		
+		Declaration d = symbolTable.lookupDec(sink_Ident.name);
+		sink_Ident.setUtilType(d.getType());
+		if (d.getType()!=Type.FILE) throw new UnsupportedOperationException();
+		return arg;
 	}
 
 	@Override

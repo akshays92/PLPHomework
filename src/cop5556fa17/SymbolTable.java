@@ -14,7 +14,7 @@ public class SymbolTable {
 		return symbolTable.get(s);
 	}
 	
-	public void putSymbolTable(String s, Declaration d){
+	public void insert(String s, Declaration d){
 		 symbolTable.put(s, d);
 	}
 }

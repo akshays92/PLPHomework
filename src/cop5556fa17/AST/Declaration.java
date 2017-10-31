@@ -8,10 +8,10 @@ public abstract class Declaration extends ASTNode {
 	
 
 	Type Type;
-	public Type getType() {
+	public Type getUtilType() {
 		return Type;
 	}
-	public void setType(Type type) {
+	public void setUtilType(Type type) {
 		Type = type;
 	}
 

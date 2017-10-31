@@ -1,7 +1,5 @@
 package cop5556fa17;
 
-import javax.lang.model.element.ElementKind;
-
 import cop5556fa17.Scanner.Kind;
 import cop5556fa17.Scanner.Token;
 import cop5556fa17.TypeUtils.Type;
@@ -67,8 +65,15 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitDeclaration_Variable(
 			Declaration_Variable declaration_Variable, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		if (!(symbolTable.lookupDec(declaration_Variable.name).equals(null))) throw new UnsupportedOperationException(); 
+		symbolTable.insert(declaration_Variable.name, declaration_Variable);
+		//declaration_Variable.setUtilType(declaration_Variable.);
+		declaration_Variable.setUtilType(TypeUtils.getType(declaration_Variable.type));
+		if(!(declaration_Variable.e.equals(null))) {
+			declaration_Variable.e.visit(this, arg);
+			if (!(declaration_Variable.getUtilType().equals(declaration_Variable.e.getUtilType()))) throw new UnsupportedOperationException();
+		}
+		return arg;
 	}
 
 	@Override
@@ -90,7 +95,6 @@ public class TypeCheckVisitor implements ASTVisitor {
 		    	   else Ʇ
             REQUIRE:  Expression_ Unary.Type ≠ Ʇ 
 		 */
-		// TODO Auto-generated method stub
 		expression_Unary.e.visit(this, arg);
 		if (expression_Unary.op.equals(Kind.OP_EXCL) && ((expression_Unary.e.getUtilType().equals(Type.BOOLEAN))||(expression_Unary.e.getUtilType().equals(Type.INTEGER))))
 			expression_Unary.setUtilType(expression_Unary.e.getUtilType());
@@ -119,23 +123,36 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitExpression_PixelSelector(
 			Expression_PixelSelector expression_PixelSelector, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		expression_PixelSelector.index.visit(this, arg);
+		Type nameType = symbolTable.lookupDec(expression_PixelSelector.name).getUtilType();
+		if (nameType.equals(Type.IMAGE)) expression_PixelSelector.setUtilType(Type.INTEGER);
+		else if (expression_PixelSelector.index.equals(null)) expression_PixelSelector.setUtilType(nameType);
+		else{}
+		if (expression_PixelSelector.getUtilType().equals(null)) throw new UnsupportedOperationException();
+		return arg;
 	}
 
 	@Override
 	public Object visitExpression_Conditional(
 			Expression_Conditional expression_Conditional, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		expression_Conditional.condition.visit(this, arg);
+		expression_Conditional.trueExpression.visit(this, arg);
+		expression_Conditional.falseExpression.visit(this, arg);
+		if (!(expression_Conditional.condition.getUtilType().equals(Type.BOOLEAN) &&  
+		expression_Conditional.trueExpression.getUtilType().equals(expression_Conditional.falseExpression.getUtilType())) )	throw new UnsupportedOperationException();
+		expression_Conditional.setUtilType(expression_Conditional.trueExpression.getUtilType());
+		return arg;
 	}
 
 	@Override
 	public Object visitDeclaration_Image(Declaration_Image declaration_Image,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		declaration_Image.source.visit(this, arg);
+		if (!symbolTable.lookupDec(declaration_Image.name).equals(null))	throw new UnsupportedOperationException();
+		symbolTable.insert(declaration_Image.name, declaration_Image);
+		declaration_Image.setUtilType(Type.IMAGE);
+		return arg;
 	}
 
 	@Override
@@ -177,7 +194,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		 * Source_Ident.Type <= symbolTable.lookupType(name)
          *  REQUIRE:  Source_Ident.Type == FILE || Source_Ident.Type == URL
 		 */
-		source_Ident.setUtilType(symbolTable.lookupDec(source_Ident.name).getType());
+		source_Ident.setUtilType(symbolTable.lookupDec(source_Ident.name).getUtilType());
 		Type source_IdentType = source_Ident.getUtilType();
 		if(!(source_IdentType==Type.FILE)||!(source_IdentType==Type.URL)) throw new UnsupportedOperationException();
 		return arg;
@@ -187,30 +204,48 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitDeclaration_SourceSink(
 			Declaration_SourceSink declaration_SourceSink, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		declaration_SourceSink.source.visit(this, arg);
+		if(!(symbolTable.lookupDec(declaration_SourceSink.name).equals(null))) throw new UnsupportedOperationException();
+		symbolTable.insert(declaration_SourceSink.name, declaration_SourceSink);
+				if(declaration_SourceSink.type.equals(Scanner.Kind.KW_file)) declaration_SourceSink.setUtilType(Type.FILE);
+				else if (declaration_SourceSink.type.equals(Scanner.Kind.KW_url)) declaration_SourceSink.setUtilType(Type.URL);						
+		return arg;
 	}
 
 	@Override
 	public Object visitExpression_IntLit(Expression_IntLit expression_IntLit,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/*
+		 * Expression_IntLit ::=  value
+			Expression_IntLIt.Type <= INTEGER
+		 */
+		expression_IntLit.setUtilType(Type.INTEGER);
+		return arg;
 	}
 
 	@Override
 	public Object visitExpression_FunctionAppWithExprArg(
 			Expression_FunctionAppWithExprArg expression_FunctionAppWithExprArg,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/*
+		 * Expression_FunctionAppWithExprArg ::=  function Expression
+			REQUIRE:  Expression.Type == INTEGER
+            Expression_FunctionAppWithExprArg.Type <= INTEGER
+		 */
+		if (!(expression_FunctionAppWithExprArg.getUtilType().equals(Type.INTEGER))) throw new UnsupportedOperationException();
+		expression_FunctionAppWithExprArg.setUtilType(Type.INTEGER);
+		return arg;
 	}
 
 	@Override
 	public Object visitExpression_FunctionAppWithIndexArg(
 			Expression_FunctionAppWithIndexArg expression_FunctionAppWithIndexArg,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
+		/*
+		 * Expression_FunctionAppWithIndexArg ::=   function Index
+             Expression_FunctionAppWithIndexArg.Type <= INTEGER
+		 */
+		expression_FunctionAppWithIndexArg.setUtilType(Type.INTEGER);
 		throw new UnsupportedOperationException();
 	}
 
@@ -229,22 +264,35 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitStatement_Out(Statement_Out statement_Out, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		statement_Out.sink.visit(this, arg);
+		statement_Out.setDec(symbolTable.lookupDec(statement_Out.name));
+		if(symbolTable.lookupDec(statement_Out.name).equals(null))throw new UnsupportedOperationException();
+		Type nameType=symbolTable.lookupDec(statement_Out.name).getUtilType();
+		if (!(
+				((nameType.equals(Type.INTEGER)||nameType.equals(Type.BOOLEAN))&&statement_Out.sink.getUtilType().equals(Type.SCREEN)) ||
+				(nameType.equals(Type.IMAGE)&&(statement_Out.sink.getUtilType().equals(Type.FILE)||statement_Out.sink.getUtilType().equals(Type.SCREEN)))
+			)) throw new UnsupportedOperationException();
+		return arg;
 	}
 
 	@Override
 	public Object visitStatement_In(Statement_In statement_In, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		statement_In.source.visit(this, arg);
+		if(symbolTable.lookupDec(statement_In.name).equals(null)) throw new UnsupportedOperationException();
+		if (!(symbolTable.lookupDec(statement_In.name).getUtilType().equals(statement_In.source.getUtilType()))) throw new UnsupportedOperationException();
+		statement_In.setDec(symbolTable.lookupDec(statement_In.name));
+		return arg;
 	}
 
 	@Override
 	public Object visitStatement_Assign(Statement_Assign statement_Assign,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		statement_Assign.lhs.visit(this, arg);
+		statement_Assign.e.visit(this, arg);
+		if(!(statement_Assign.lhs.getUtilType().equals(statement_Assign.e.getUtilType()))) throw new UnsupportedOperationException();
+		statement_Assign.setCartesian(statement_Assign.lhs.isCarteisan);
+		return arg;
 	}
 
 	@Override
@@ -256,7 +304,7 @@ public class TypeCheckVisitor implements ASTVisitor {
          *  LHS.isCarteisan <= Index.isCartesian
 		 */
 		lhs.lhsDeclaration=symbolTable.lookupDec(lhs.name);
-		lhs.setUtilType(lhs.lhsDeclaration.getType());
+		lhs.setUtilType(lhs.lhsDeclaration.getUtilType());
 		lhs.isCarteisan=lhs.index.isCartesian();
 		return arg;
 	}
@@ -281,8 +329,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 		 */
 		
 		Declaration d = symbolTable.lookupDec(sink_Ident.name);
-		sink_Ident.setUtilType(d.getType());
-		if (d.getType()!=Type.FILE) throw new UnsupportedOperationException();
+		sink_Ident.setUtilType(d.getUtilType());
+		if (d.getUtilType()!=Type.FILE) throw new UnsupportedOperationException();
 		return arg;
 	}
 
@@ -290,15 +338,23 @@ public class TypeCheckVisitor implements ASTVisitor {
 	public Object visitExpression_BooleanLit(
 			Expression_BooleanLit expression_BooleanLit, Object arg)
 			throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/*
+		 * Expression_BooleanLit ::=  value
+			Expression_BooleanLit.Type <= BOOLEAN
+		 */
+		expression_BooleanLit.setUtilType(Type.BOOLEAN);
+		return arg;
 	}
 
 	@Override
 	public Object visitExpression_Ident(Expression_Ident expression_Ident,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		/*
+		 * Expression_Ident  ::=   name
+			Expression_Ident.Type <= symbolTable.lookupType(name)
+		 */
+		expression_Ident.setUtilType(symbolTable.lookupDec(expression_Ident.name).getUtilType());
+		return arg;
 	}
 
 }

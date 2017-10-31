@@ -107,17 +107,6 @@ public class TypeCheckTest {
 		show(ast);
 	}
 
-
-	
-	/**
-	 * This test should pass with a fully implemented assignment
-	 * @throws Exception
-	 */
-	 @Test
-	 public void testDec1() throws Exception {
-	 String input = "prog int k = 42;";
-	 typeCheck(input);
-	 }
 	 
 	 /**
 	  * This program does not declare k. The TypeCheckVisitor should

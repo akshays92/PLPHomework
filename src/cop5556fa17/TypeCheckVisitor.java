@@ -79,8 +79,26 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitExpression_Binary(Expression_Binary expression_Binary,
 			Object arg) throws Exception {
-		// TODO Auto-generated method stub
-		throw new UnsupportedOperationException();
+		expression_Binary.e0.visit(this, arg);
+		expression_Binary.e1.visit(this, arg);
+		if(expression_Binary.op.equals(Kind.OP_EQ)||expression_Binary.op.equals(Kind.OP_NEQ)) expression_Binary.setUtilType(Type.BOOLEAN);
+		else if ((expression_Binary.op.equals(Kind.OP_GE)||expression_Binary.op.equals(Kind.OP_GT)||expression_Binary.op.equals(Kind.OP_LE)||expression_Binary.op.equals(Kind.OP_LT))
+				&& expression_Binary.e0.getUtilType().equals(Type.INTEGER)) expression_Binary.setUtilType(Type.BOOLEAN);
+		else if ((expression_Binary.op.equals(Kind.OP_AND)||expression_Binary.op.equals(Kind.OP_OR))
+				&& (expression_Binary.e0.getUtilType().equals(Type.INTEGER)||expression_Binary.e0.getUtilType().equals(Type.BOOLEAN))) 
+					expression_Binary.setUtilType(expression_Binary.getUtilType());
+		else if (
+				(		expression_Binary.op.equals(Kind.OP_DIV)||expression_Binary.op.equals(Kind.OP_MINUS)||
+						expression_Binary.op.equals(Kind.OP_MOD)||expression_Binary.op.equals(Kind.OP_PLUS)||
+						expression_Binary.op.equals(Kind.OP_POWER)||expression_Binary.op.equals(Kind.OP_TIMES)
+				)
+				&& expression_Binary.e0.getUtilType().equals(Type.INTEGER)
+				)  expression_Binary.setUtilType(Type.INTEGER); ;
+		
+		;
+		if(!(expression_Binary.e0.getUtilType().equals(expression_Binary.e1.getUtilType()))) throw new UnsupportedOperationException();
+		if((expression_Binary.getUtilType().equals(null))) throw new UnsupportedOperationException();
+		return arg;
 	}
 
 	@Override
@@ -303,7 +321,10 @@ public class TypeCheckVisitor implements ASTVisitor {
          *  LHS.Type <= LHS.Declaration.Type
          *  LHS.isCarteisan <= Index.isCartesian
 		 */
-		lhs.lhsDeclaration=symbolTable.lookupDec(lhs.name);
+		Declaration d = symbolTable.lookupDec(lhs.name);
+		if (d.equals(null)) throw new SemanticException(lhs.firstToken, "Semmantic exception");
+		else 
+		lhs.lhsDeclaration=d;
 		lhs.setUtilType(lhs.lhsDeclaration.getUtilType());
 		lhs.isCarteisan=lhs.index.isCartesian();
 		return arg;

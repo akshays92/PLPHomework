@@ -765,7 +765,6 @@ public class Parser {
 		Token ft = t;
 		match(IDENTIFIER);	
 		lhs = new LHS(ft,ft,lhstail());
-		//TODO Index in lhstail() can return null Make a testcase to exploit this
 		return lhs;
 	}
 	

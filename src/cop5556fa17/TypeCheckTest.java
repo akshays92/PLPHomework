@@ -63,6 +63,7 @@ public class TypeCheckTest {
 			ast.visit(v, null);
 		} catch (Exception e) {
 			show(e);
+			e.printStackTrace();
 			throw e;
 		}
 	}

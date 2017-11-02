@@ -175,8 +175,49 @@ public class TypeCheckVisitor implements ASTVisitor {
 		 *	REQUIRE: Expression0.Type == INTEGER &&  Expression1.Type == INTEGER
 		 *	Index.isCartesian <= !(Expression0 == KW_r && Expression1 == KW_a)
 		 */
-		
+		//TODO mera pehle ka kachra and naya kachra alag alag hai, kisi se confirm karo kya karna hai 
 		//visit index[e0] if not null
+		if(!(index.e0==null)) index.e0.visit(this, arg);
+		
+		//visit index[e1] if not null
+		if(!(index.e1==null)) index.e1.visit(this, arg);
+		
+		//throw exception if expressions inside index are not of type integer
+		if(!(index.e0.getUtilType()==Type.INTEGER && index.e1.getUtilType()==Type.INTEGER)) 
+			throw new SemanticException(index.firstToken,"Semmantic exception in visitIndex : expressions inside Index are not of type Integer");
+		else{
+			if(index.e0.getClass() == Expression_PredefinedName.class && index.e1.getClass() == Expression_PredefinedName.class){
+				Expression_PredefinedName pd1 = (Expression_PredefinedName)index.e0;
+				Expression_PredefinedName pd2 = (Expression_PredefinedName)index.e1;
+				index.setCartesian(!(pd1.kind == Kind.KW_r && pd2.kind == Kind.KW_a));
+			}
+			else{
+				index.setCartesian(!(index.e0.firstToken.isKind(Kind.KW_r) && index.e1.firstToken.isKind(Kind.KW_a)));
+			}
+		}
+		return arg;
+		/*
+		 * Hussu ka kachra
+		 @Override
+		public Object visitIndex(Index index, Object arg) throws Exception {
+		index.e0.visit(this, arg);
+		index.e1.visit(this, arg);
+		if(index.e0.varType == Type.INTEGER && index.e1.varType == Type.INTEGER){
+			if(index.e0.getClass() == Expression_PredefinedName.class && index.e1.getClass() == Expression_PredefinedName.class){
+				Expression_PredefinedName pd1 = (Expression_PredefinedName)index.e0;
+				Expression_PredefinedName pd2 = (Expression_PredefinedName)index.e1;
+				
+				index.setCartesian(!(pd1.kind == Kind.KW_r && pd2.kind == Kind.KW_a));
+			}
+			return null;
+		}
+		else
+			throw new SemanticException(index.firstToken, "Index Expressions should be of integer types.");
+		}
+		 */
+		/*
+		 * mera purana kachra
+		 //visit index[e0] if not null
 		if(!(index.e0==null)) index.e0.visit(this, arg);
 		
 		//visit index[e1] if not null
@@ -187,6 +228,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 			throw new SemanticException(index.firstToken,"Semmantic exception in visitIndex : expressions inside Index are not of type Integer"); 
 		index.setCartesian(!(index.e0.firstToken.isKind(Kind.KW_r) && index.e1.firstToken.isKind(Kind.KW_a)));
 		return arg;
+		 */
 	}
 
 	@Override

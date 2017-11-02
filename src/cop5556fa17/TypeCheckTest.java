@@ -2,33 +2,9 @@ package cop5556fa17;
 import org.junit.Rule;
 import org.junit.Test;
 import org.junit.rules.ExpectedException;
-import static org.junit.Assert.*;
-
 import cop5556fa17.AST.ASTNode;
 import cop5556fa17.AST.ASTVisitor;
-import cop5556fa17.AST.Declaration_Image;
-import cop5556fa17.AST.Declaration_SourceSink;
-import cop5556fa17.AST.Declaration_Variable;
-import cop5556fa17.AST.Expression;
-import cop5556fa17.AST.Expression_FunctionAppWithExprArg;
-import cop5556fa17.AST.Expression_IntLit;
-import cop5556fa17.AST.Expression_PixelSelector;
-import cop5556fa17.AST.Expression_PredefinedName;
-import cop5556fa17.AST.Expression_Unary;
-import cop5556fa17.AST.Index;
-import cop5556fa17.AST.LHS;
-import cop5556fa17.AST.Program;
-import cop5556fa17.AST.Source_CommandLineParam;
-import cop5556fa17.AST.Source_StringLiteral;
-import cop5556fa17.AST.Statement_Out;
-import cop5556fa17.AST.Statement_Assign;
-import cop5556fa17.Parser.SyntaxException;
-import cop5556fa17.Scanner.Kind;
-import cop5556fa17.Scanner.LexicalException;
-import cop5556fa17.Scanner.Token;
 import cop5556fa17.TypeCheckVisitor.SemanticException;
-
-import static cop5556fa17.Scanner.Kind.*;
 
 public class TypeCheckTest {
 

@@ -886,8 +886,8 @@ public class Parser {
 		Expression e0=new Expression_PredefinedName(firstToken, KW_r);
 		match(COMMA);
 		Token firstTokene1=t;
-		match(KW_A);
-		Expression e1=new Expression_PredefinedName(firstTokene1, KW_A);
+		match(KW_a);
+		Expression e1=new Expression_PredefinedName(firstTokene1, KW_a);
 		return new Index(firstToken, e0, e1);
 	}
 	

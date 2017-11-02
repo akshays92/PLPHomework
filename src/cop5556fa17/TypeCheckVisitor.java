@@ -207,7 +207,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 		if(!(expression_PixelSelector.index==null)) expression_PixelSelector.index.visit(this, arg);
 		
 		//setting the type for expressionPixelSelector
-		Type nameType = symbolTable.lookupDec(expression_PixelSelector.name).getUtilType();
+		Declaration nameDeclaration = symbolTable.lookupDec(expression_PixelSelector.name);
+		if (nameDeclaration==null) throw new SemanticException(expression_PixelSelector.firstToken,"Semmantic exception in expression_PixelSelector : nameDec for expression_PixelSelector is null");
+		Type nameType = nameDeclaration.getUtilType();
+		
 		if (nameType==Type.IMAGE) expression_PixelSelector.setUtilType(Type.INTEGER);
 		else if (expression_PixelSelector.index==null) expression_PixelSelector.setUtilType(nameType);
 		//code should not reach here
@@ -271,7 +274,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		
 		//if xsize and ysize are not null, they should be of type integer
 		if(!(declaration_Image.xSize==null)){
-			if (	(!(declaration_Image.ySize==null))	&&	(declaration_Image.xSize.getUtilType()==Type.INTEGER)	&&	(declaration_Image.ySize.getUtilType()==Type.INTEGER)	)
+			if (	!((!(declaration_Image.ySize==null))	&&	(declaration_Image.xSize.getUtilType()==Type.INTEGER)	&&	(declaration_Image.ySize.getUtilType()==Type.INTEGER))	)
 				throw new SemanticException(declaration_Image.firstToken,"Semmantic exception in Declaration_Image: xsize or ysize are not Integer types");
 		}
 		return arg;
@@ -324,7 +327,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 		 * Source_Ident.Type <= symbolTable.lookupType(name)
          *  REQUIRE:  Source_Ident.Type == FILE || Source_Ident.Type == URL
 		 */
-		source_Ident.setUtilType(symbolTable.lookupDec(source_Ident.name).getUtilType());
+		Declaration dec = symbolTable.lookupDec(source_Ident.name);
+		if (dec==null) throw new SemanticException(source_Ident.firstToken,"Semmantic exception in source_Ident: source_Ident is not declared yet");
+		source_Ident.setUtilType(dec.getUtilType());
 		Type source_IdentType = source_Ident.getUtilType();
 		if(!((source_IdentType==Type.FILE)||(source_IdentType==Type.URL)))
 		throw new SemanticException(source_Ident.firstToken,"Semmantic exception in source_Ident: source_Ident is not file or URL type");
@@ -497,7 +502,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 		if(d==null) throw new SemanticException(lhs.firstToken,"Semmantic exception in lhs");
 		lhs.lhsDeclaration=d;
 		lhs.setUtilType(d.getUtilType());
-		lhs.isCarteisan=lhs.index.isCartesian();
+		if(!(lhs.index==null))	lhs.isCarteisan=lhs.index.isCartesian();
+		else lhs.isCarteisan=false;
 		return arg;
 	}
 

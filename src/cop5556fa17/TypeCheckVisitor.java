@@ -115,13 +115,18 @@ public class TypeCheckVisitor implements ASTVisitor {
 		//check e2 and if not null visit it
 		if (!(expression_Binary.e1==null)) expression_Binary.e1.visit(this, arg);
 		
+		//check if e1 and e2 have same types
+		if(!(expression_Binary.e0.getUtilType()==expression_Binary.e1.getUtilType())) 
+			throw new SemanticException(expression_Binary.firstToken,"Semmantic exception in expressionBinary : type of e1 is not same as type of e2");
+				
+		
 		//setting type for expression binary
 		if(expression_Binary.op==Kind.OP_EQ||expression_Binary.op==Kind.OP_NEQ) expression_Binary.setUtilType(Type.BOOLEAN);
 		else if ((expression_Binary.op==Kind.OP_GE||expression_Binary.op==Kind.OP_GT||expression_Binary.op==Kind.OP_LE||expression_Binary.op==Kind.OP_LT)
 				&& expression_Binary.e0.getUtilType()==Type.INTEGER) expression_Binary.setUtilType(Type.BOOLEAN);
 		else if ((expression_Binary.op==Kind.OP_AND||expression_Binary.op==Kind.OP_OR)
 				&& (expression_Binary.e0.getUtilType()==Type.INTEGER||expression_Binary.e0.getUtilType()==Type.BOOLEAN)) 
-					expression_Binary.setUtilType(expression_Binary.getUtilType());
+					expression_Binary.setUtilType(expression_Binary.e0.getUtilType());
 		else if (
 				(		expression_Binary.op==Kind.OP_DIV||expression_Binary.op==Kind.OP_MINUS||
 						expression_Binary.op==Kind.OP_MOD||expression_Binary.op==Kind.OP_PLUS||
@@ -133,9 +138,6 @@ public class TypeCheckVisitor implements ASTVisitor {
 		else expression_Binary.setUtilType(null);
 		;
 		
-		//check if e1 and e2 have same types
-		if(!(expression_Binary.e0.getUtilType()==expression_Binary.e1.getUtilType())) 
-			throw new SemanticException(expression_Binary.firstToken,"Semmantic exception in expressionBinary : type of e1 is not same as type of e2");
 		
 		//check if type of binary expression is not null
 		if(expression_Binary.getUtilType()==null) throw new SemanticException(expression_Binary.firstToken,"Semmantic exception in expressionBinary : type is null for binary expression");

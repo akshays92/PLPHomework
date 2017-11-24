@@ -163,7 +163,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		//set type of unary expression
 		if (expression_Unary.op==Kind.OP_EXCL && (expression_Unary.e.getUtilType()==Type.BOOLEAN||expression_Unary.e.getUtilType()==Type.INTEGER))
 			expression_Unary.setUtilType(expression_Unary.e.getUtilType());
-		else if ((expression_Unary.op==Kind.OP_PLUS||expression_Unary.op==Kind.OP_PLUS)&&expression_Unary.e.getUtilType()==Type.INTEGER) 
+		else if ((expression_Unary.op==Kind.OP_PLUS||expression_Unary.op==Kind.OP_MINUS)&&expression_Unary.e.getUtilType()==Type.INTEGER) 
 			expression_Unary.setUtilType(Type.INTEGER);
 		else expression_Unary.setUtilType(null);
 		if (expression_Unary.getUtilType()==null) throw new SemanticException(expression_Unary.firstToken,"Semmantic exception in expressionUnary : type is null for unary expression");
@@ -198,39 +198,6 @@ public class TypeCheckVisitor implements ASTVisitor {
 			}
 		}
 		return arg;
-		/*
-		 * Hussu ka kachra
-		 @Override
-		public Object visitIndex(Index index, Object arg) throws Exception {
-		index.e0.visit(this, arg);
-		index.e1.visit(this, arg);
-		if(index.e0.varType == Type.INTEGER && index.e1.varType == Type.INTEGER){
-			if(index.e0.getClass() == Expression_PredefinedName.class && index.e1.getClass() == Expression_PredefinedName.class){
-				Expression_PredefinedName pd1 = (Expression_PredefinedName)index.e0;
-				Expression_PredefinedName pd2 = (Expression_PredefinedName)index.e1;
-				
-				index.setCartesian(!(pd1.kind == Kind.KW_r && pd2.kind == Kind.KW_a));
-			}
-			return null;
-		}
-		else
-			throw new SemanticException(index.firstToken, "Index Expressions should be of integer types.");
-		}
-		 */
-		/*
-		 * mera purana kachra
-		 //visit index[e0] if not null
-		if(!(index.e0==null)) index.e0.visit(this, arg);
-		
-		//visit index[e1] if not null
-		if(!(index.e1==null)) index.e1.visit(this, arg);
-		
-		//throw exception if expressions inside index are not of type integer
-		if(!(index.e0.getUtilType()==Type.INTEGER && index.e1.getUtilType()==Type.INTEGER)) 
-			throw new SemanticException(index.firstToken,"Semmantic exception in visitIndex : expressions inside Index are not of type Integer"); 
-		index.setCartesian(!(index.e0.firstToken.isKind(Kind.KW_r) && index.e1.firstToken.isKind(Kind.KW_a)));
-		return arg;
-		 */
 	}
 
 	@Override
@@ -508,9 +475,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 		//check if declaration is already done
 		if(symbolTable.lookupDec(statement_In.name)==null)
 			throw new SemanticException(statement_In.firstToken,"Semmantic exception in statement_In: statement_Out declaration missing");
-		//check if type for name is same as source type
-		if (!(symbolTable.lookupDec(statement_In.name).getUtilType()==statement_In.source.getUtilType())) 
-			throw new SemanticException(statement_In.firstToken,"Semmantic exception in statement_In: statement_Out declaration not of type source");
+		//TODO check if type for name is same as source type rakhna hai ki nikalna hai soch lo
+		//if (!(symbolTable.lookupDec(statement_In.name).getUtilType()==statement_In.source.getUtilType())) 
+		//	throw new SemanticException(statement_In.firstToken,"Semmantic exception in statement_In: statement_Out declaration not of type source");
 		statement_In.setDec(symbolTable.lookupDec(statement_In.name));
 		return arg;
 	}

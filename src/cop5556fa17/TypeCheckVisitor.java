@@ -494,7 +494,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 		if(!(statement_Assign.lhs==null)) statement_Assign.lhs.visit(this, arg);
 		if(!(statement_Assign.e==null)) statement_Assign.e.visit(this, arg);
 		//check if lhs type is same as expression type
-		if(!(statement_Assign.lhs.getUtilType()==statement_Assign.e.getUtilType())) 
+		if((statement_Assign.lhs.getUtilType()==Type.IMAGE)&&(statement_Assign.e.getUtilType()==Type.INTEGER)){}
+		else if(!(statement_Assign.lhs.getUtilType()==statement_Assign.e.getUtilType())) 
 			throw new SemanticException(statement_Assign.firstToken,"Semmantic exception in statement_Assign: lhs type is not same as expression type");
 		statement_Assign.setCartesian(statement_Assign.lhs.isCarteisan);
 		return arg;

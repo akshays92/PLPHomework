@@ -9,9 +9,6 @@ import org.objectweb.asm.FieldVisitor;
 import org.objectweb.asm.Label;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-
-import src.cop5556fa17.ImageFrame;
-
 import cop5556fa17.Scanner.Kind;
 import cop5556fa17.TypeUtils.Type;
 import cop5556fa17.AST.ASTNode;

@@ -416,10 +416,10 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 			throws Exception {
 		// throw new UnsupportedOperationException();
 		cw.visitField(ACC_STATIC, declaration_SourceSink.name,
-				ImageSupport.StringDesc, null, null);
+				ImageSupport.StringDesc, null, null).visitEnd();
 		if (declaration_SourceSink.source != null)
 			declaration_SourceSink.source.visit(this, arg);
-		mv.visitFieldInsn(PUTSTATIC, classDesc, declaration_SourceSink.name,
+		mv.visitFieldInsn(PUTSTATIC, className, declaration_SourceSink.name,
 				ImageSupport.StringDesc);
 		return null;
 	}

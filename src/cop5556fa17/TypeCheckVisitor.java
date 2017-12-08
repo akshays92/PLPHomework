@@ -323,10 +323,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 		if(!(source_CommandLineParam.paramNum==null)) source_CommandLineParam.paramNum.visit(this, arg);
 		
 		//set type for expression same as type for paramnum 
-		source_CommandLineParam.setUtilType(source_CommandLineParam.paramNum.getUtilType());
+		source_CommandLineParam.setUtilType(null);
 		
 		//now throw an exception if type for this parameter is not INTEGER
-		if (!(source_CommandLineParam.getUtilType()==Type.INTEGER))	
+		if (!(source_CommandLineParam.paramNum.getUtilType()==Type.INTEGER))	
 			throw new SemanticException(source_CommandLineParam.firstToken,"Semmantic exception in source_CommandLineParam: commandline parameter is not Integer type");
 		return arg;
 	}
@@ -373,7 +373,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 		else if (declaration_SourceSink.type==Scanner.Kind.KW_url) declaration_SourceSink.setUtilType(Type.URL);	
 		
 		//throw exception if type of source is not same as type of declaration
-		if(!(declaration_SourceSink.source.getUtilType()==declaration_SourceSink.getUtilType()))
+		if(!(declaration_SourceSink.source.getUtilType()==null||(declaration_SourceSink.source.getUtilType()==declaration_SourceSink.getUtilType())))
 				throw new SemanticException(declaration_SourceSink.firstToken,"Semmantic exception in declaration_SourceSink: source type not equal to expression type");
 		return arg;
 	}

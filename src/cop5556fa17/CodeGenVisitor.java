@@ -120,6 +120,8 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 		cw.visitField(ACC_STATIC, "y", "I", null, 0).visitEnd();
 		cw.visitField(ACC_STATIC, "X", "I", null, 0).visitEnd();
 		cw.visitField(ACC_STATIC, "Y", "I", null, 0).visitEnd();
+		cw.visitField(ACC_STATIC, "R", "I", null, 0).visitEnd();
+		cw.visitField(ACC_STATIC, "A", "I", null, 0).visitEnd();
 
 		// Sets max stack size and number of local vars.
 		// Because we use ClassWriter.COMPUTE_FRAMES as a parameter in the
@@ -500,29 +502,25 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 					"polar_r", RuntimeFunctions.polar_rSig, false);
 			break;
 		case KW_R:
-			mv.visitFieldInsn(GETSTATIC, className, "X", "I");
-			mv.visitFieldInsn(GETSTATIC, className, "Y", "I");
-			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className,
-					"polar_r", RuntimeFunctions.polar_rSig, false);
+			mv.visitFieldInsn(GETSTATIC, className, "R", "I");
 			break;
+			
 		case KW_a:
 			mv.visitFieldInsn(GETSTATIC, className, "x", "I");
 			mv.visitFieldInsn(GETSTATIC, className, "y", "I");
 			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className,
 					"polar_a", RuntimeFunctions.polar_aSig, false);
 			break;
+			
 		case KW_A:
-			mv.visitInsn(ICONST_0);
-			mv.visitFieldInsn(GETSTATIC, className, "Y", "I");
-			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className,
-					"polar_a", RuntimeFunctions.polar_aSig, false);
+			mv.visitFieldInsn(GETSTATIC, className, "A", "I");
 			break;
 			
 		case KW_DEF_X:
-			mv.visitLdcInsn(256);
+			mv.visitLdcInsn(new Integer(256));
 			break;
 		case KW_DEF_Y:
-			mv.visitLdcInsn(256);
+			mv.visitLdcInsn(new Integer(256));
 			break;
 		case KW_Z:
 			mv.visitLdcInsn(0xFFFFFF);
@@ -738,22 +736,32 @@ public class CodeGenVisitor implements ASTVisitor, Opcodes {
 			mv.visitFieldInsn(GETSTATIC, className, statement_Assign.lhs.name, ImageSupport.ImageDesc);
 			mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "getX", ImageSupport.getXSig, false);
 			mv.visitFieldInsn(PUTSTATIC, className, "X", "I");
+			
 			mv.visitFieldInsn(GETSTATIC, className, statement_Assign.lhs.name, ImageSupport.ImageDesc);
 			mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "getY", ImageSupport.getYSig, false);
 			mv.visitFieldInsn(PUTSTATIC, className, "Y", "I");
+			
+			mv.visitFieldInsn(GETSTATIC, className, "X", "I");			
+			mv.visitFieldInsn(GETSTATIC, className, "Y", "I");
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "polar_r", RuntimeFunctions.polar_rSig, false);
+			mv.visitFieldInsn(PUTSTATIC, className, "R", "I");	
+			
+			mv.visitLdcInsn(0);			
+			mv.visitFieldInsn(GETSTATIC, className, "Y", "I");
+			mv.visitMethodInsn(INVOKESTATIC, RuntimeFunctions.className, "polar_a", RuntimeFunctions.polar_aSig, false);
+			mv.visitFieldInsn(PUTSTATIC, className, "A", "I");	
+			
 			mv.visitLdcInsn(0);
 			mv.visitLdcInsn(0);
 			mv.visitLabel(yLabel);
 			mv.visitFieldInsn(PUTSTATIC, className, "y", "I");
-			mv.visitFieldInsn(GETSTATIC, className, statement_Assign.lhs.name,ImageSupport.ImageDesc);
-			mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "getY", ImageSupport.getYSig, false);
+			mv.visitFieldInsn(GETSTATIC, className, "Y", "I");
 			mv.visitJumpInsn(IF_ICMPGE, end2);
 			mv.visitLdcInsn(0);
 			mv.visitLdcInsn(0);
 			mv.visitLabel(xLabel);
 			mv.visitFieldInsn(PUTSTATIC, className, "x", "I");
-			mv.visitFieldInsn(GETSTATIC, className, statement_Assign.lhs.name, ImageSupport.ImageDesc);
-			mv.visitMethodInsn(INVOKESTATIC, ImageSupport.className, "getX", ImageSupport.getXSig, false);
+			mv.visitFieldInsn(GETSTATIC, className, "X", "I");
 			mv.visitJumpInsn(IF_ICMPGE, end1);
 			statement_Assign.e.visit(this, arg);
 			statement_Assign.lhs.visit(this, arg);

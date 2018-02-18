@@ -2,9 +2,9 @@ package cop5556fa17;
 
 public interface ImageResources {
 
-	public final static String imageFile1 = "/home/akshay/workspace/PLPHomework/src/ShelterPoint.jpg";
-	public final static String imageFile2 = "/home/akshay/workspace/PLPHomework/src/gg.jpg";
-	public final static String imageFile3 = "/home/akshay/Desktop/DMS/lenna.png";
+	public final static String imageFile1 = "./src/ShelterPoint.jpg";
+	public final static String imageFile2 = "./src/gg.jpg";
+	public final static String imageFile3 = "./src/lenna.png";
 	
 	public final static String imageURL1 = "file://" + imageFile1;
 	

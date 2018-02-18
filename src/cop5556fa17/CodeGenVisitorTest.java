@@ -657,6 +657,8 @@ public class CodeGenVisitorTest implements ImageResources{
 
 	@Test
 	public void failedSrishti4() throws Exception {
+		String current = new java.io.File( "." ).getCanonicalPath();
+        System.out.println("Current dir:"+current);
 		String prog = "image2";
 		String input = prog + "//args: <imageURL>\nimage[128,128] g; \ng <- @ 0;\ng -> SCREEN;\n";
 		byte[] bytecode = genCode(input);

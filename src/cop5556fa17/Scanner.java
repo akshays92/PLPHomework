@@ -64,8 +64,6 @@ public class Scanner {
 	 * some token methods access the chars array in the associated Scanner.
 	 * 
 	 * 
-	 * @author Beverly Sanders
-	 * 
 	 */
 	public class Token {
 		public final Kind kind;
